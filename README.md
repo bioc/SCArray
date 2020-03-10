@@ -1,2 +1,3 @@
 # SCArray
-Single cell RNA-seq data manipulation and analysis using GDS files
+
+Large-scale single-cell RNA-seq data manipulation and analysis using GDS files

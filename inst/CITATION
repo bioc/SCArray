@@ -1,0 +1,9 @@
+citHeader("To cite SCArray in publications use:")
+
+citEntry(entry="Misc",
+    title = "",
+    author = personList(person("Xiuwen", "Zheng")),
+    journal = "",
+    year = "",
+    textVersion = ""
+)
