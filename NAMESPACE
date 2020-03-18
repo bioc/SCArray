@@ -1,9 +1,9 @@
 # Export the following names
-useDynLib(SCArray,
-)
+# useDynLib(SCArray,)
 
 # Export all names
 exportPattern("^sc*")
+export(SCArraySeed)
 
 # Import all packages listed as Imports or Depends
 import(methods)

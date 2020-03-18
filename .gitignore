@@ -3,6 +3,11 @@
 .Rapp.history
 .DS_Store
 
+# Compiler files
+*.o
+*.so
+*.dll
+
 # Session Data files
 .RData
 
@@ -38,3 +43,4 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
