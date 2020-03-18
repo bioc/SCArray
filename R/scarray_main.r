@@ -120,7 +120,7 @@ scClose <- function(gdsfile)
 
 
 #######################################################################
-# Close the SCArray GDS file
+# Get an DelayedArray instance
 #
 scArray <- function(gdsfile, varname)
 {
