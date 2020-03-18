@@ -65,10 +65,6 @@
 
 
 #######################################################################
-# Internal functions
-#
-
-#######################################################################
 # Open a SCArray GDS file
 #
 scOpen <- function(gdsfn, readonly=TRUE, allow.duplicate=FALSE)
@@ -123,4 +119,14 @@ scClose <- function(gdsfile)
 }
 
 
-
+#######################################################################
+# Close the SCArray GDS file
+#
+scArray <- function(gdsfile, varname)
+{
+    # check
+    stopifnot(inherits(gdsfile, "SCArrayFileClass"))
+    # new DelayedArray
+    seed <- SCArraySeed(gdsfile, varname)
+    DelayedArray(seed)
+}

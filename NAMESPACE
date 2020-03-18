@@ -3,15 +3,19 @@
 
 # Export all names
 exportPattern("^sc*")
-export(SCArraySeed)
+# export(SCArraySeed)
 
 # Import all packages listed as Imports or Depends
 import(methods)
+import(BiocGenerics)
+import(S4Vectors)
+import(IRanges)
+import(DelayedArray)
 import(Rcpp)
-importFrom(stats, as.formula, binomial, gaussian, glm, lm, model.frame,
-    model.matrix, model.response, na.omit, sd, var, qnorm)
+# import(Matrix)
+# importFrom(stats, )
 importFrom(utils, object.size, packageVersion, str)
 importFrom(gdsfmt, createfn.gds, openfn.gds, closefn.gds, index.gdsn, ls.gdsn,
     add.gdsn, read.gdsn, readex.gdsn, readmode.gdsn, put.attr.gdsn,
-    get.attr.gdsn)
+    get.attr.gdsn, objdesp.gdsn)
 importFrom(RcppParallel, setThreadOptions, RcppParallelLibs)

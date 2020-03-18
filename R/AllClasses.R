@@ -28,28 +28,6 @@ setValidity("SCArrayFileClass", function(object)
     }
 )
 
-# GDSArray and GDSMatrix classes
-setClass("GDS_scArray", contains="DelayedArray")
-setClass("GDS_scMatrix", contains=c("DelayedMatrix", "GDS_scArray"))
-
-setAs("GDS_scArray", "GDS_scMatrix", function(from) new("GDS_scMatrix", from))
-setAs("GDS_scMatrix", "GDS_scArray", function(from) from)
-setAs("ANY", "GDS_scMatrix",
-    function(from) as(as(from, "GDS_scArray"), "GDS_scMatrix"))
-
-setValidity("GDS_scArray", function(object)
-    {
-        if (!is(object@seed, "SCArraySeed"))
-            return("'object@seed' must be a SCArraySeed object")
-        TRUE
-    }
-)
-
-setMethod("DelayedArray", "SCArraySeed",
-    function(seed) new_DelayedArray(seed, Class="GDS_scArray")
-)
-
-
 
 #######################################################################
 # Class definition
@@ -65,6 +43,11 @@ setClass("SCArraySeed", contains="Array",
     )
 )
 
+setMethod("DelayedArray", "SCArraySeed",
+    function(seed) new_DelayedArray(seed, Class="DelayedArray")
+)
+
+
 # show method for SCArraySeed object
 setMethod("show", "SCArraySeed", function(object)
     {
@@ -77,41 +60,32 @@ setMethod("show", "SCArraySeed", function(object)
 
 
 # extract an array from DelayedArray
-.extract_array_from_SCArraySeed <- function(x, index)
-{
-    ans_dim <- DelayedArray:::get_Nindex_lengths(index, dim(x))
-    if (any(ans_dim == 0L))
+setMethod("extract_array", "SCArraySeed", function(x, index)
     {
-        tp <- as.character(objdesp.gdsn(index.gdsn(x@gds, x@varname))$type)
-        ans <- switch(tp,
-            Raw=raw(), Integer=integer(), Logical=logical(),
-            Real=double(), String=character(),
-            stop("Unsupported data type: ", tp))
-        dim(ans) <- ans_dim
-    } else {
-        ans <- readex.gdsn(index.gdsn(x@gds, x@varname), index, .sparse=FALSE)
-        if (!is.array(ans))  ## 'ans' must be an array
+        ans_dim <- DelayedArray:::get_Nindex_lengths(index, dim(x))
+        if (any(ans_dim == 0L))
+        {
+            tp <- objdesp.gdsn(index.gdsn(x@gds, x@varname))$type
+            ans <- switch(as.character(tp),
+                Raw=raw(), Integer=integer(), Logical=logical(),
+                Real=double(), String=character(),
+                stop("Unsupported data type: ", tp))
             dim(ans) <- ans_dim
+        } else {
+            nd <- index.gdsn(x@gds, x@varname)
+            ans <- readex.gdsn(nd, index, .sparse=FALSE)
+            if (!is.array(ans))  ## 'ans' must be an array
+                dim(ans) <- ans_dim
+        }
+        ans
     }
-    ans
-}
-
-# GDSArray constructor and coercion methods.
-setMethod("extract_array", "SCArraySeed", .extract_array_from_SCArraySeed)
+)
 
 
-#######################################################################
 # SCArraySeed constructor
-
 SCArraySeed <- function(gds, varname)
 {
     # check gds
-    if (is.character(gds))
-    {
-        stopifnot(length(gds) == 1L)
-        gds <- scOpen(gds, allow.duplicate=TRUE)
-        on.exit(scClose(gds))
-    }
     stopifnot(inherits(gds, "SCArrayFileClass"))
     # check varname
     stopifnot(is.character(varname), length(varname)==1L, !is.na(varname))
@@ -123,16 +97,8 @@ SCArraySeed <- function(gds, varname)
     if (!dp$is.array)
         stop("'", varname, "' is not an array.")
     dm <- dp$dim
-    on.exit()
-
     # output
     new2("SCArraySeed", gds=gds, varname=varname, dim=dm,
         dimnames=vector("list", length(dm)))
 }
 
-
-scArray <- function(gds, varname)
-{
-    seed <- SCArraySeed(gds, varname)
-    DelayedArray(seed)
-}

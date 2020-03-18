@@ -4,10 +4,10 @@ Title: Large-scale single-cell RNA-seq data manipulation and analysis with
         efficient algorithms
 Version: 0.99.0
 Date: 2020-03-10
-Depends: R (>= 3.5.0), gdsfmt (>= 1.23.6), Rcpp, DelayedArray
+Depends: R (>= 3.5.0), gdsfmt (>= 1.23.6), methods, DelayedArray, Rcpp
 LinkingTo: gdsfmt, Rcpp, RcppArmadillo, RcppParallel
-Imports: methods, stats, utils, Matrix, RcppParallel
-Suggests: parallel, crayon, RUnit, knitr, BiocGenerics
+Imports: BiocGenerics, S4Vectors, IRanges, utils, RcppParallel
+Suggests: parallel, Matrix, crayon, RUnit, knitr
 Authors@R: c(person("Xiuwen", "Zheng", role=c("aut", "cre"),
         email="xiuwen.zheng@abbvie.com", comment=c(ORCID="0000-0002-1390-0708")))
 Description: Large-scale single-cell RNA-seq data manipulation and statistical
@@ -20,5 +20,5 @@ SystemRequirements: C++11, GNU make
 VignetteBuilder: knitr
 ByteCompile: TRUE
 URL: https://github.com/AbbVie-ComputationalGenomics/SCArray
-biocViews: Infrastructure, DataRepresentation, RNASeq, SingleCell,
+biocViews: Infrastructure, DataRepresentation, SingleCell, RNASeq,
         StatisticalMethod
