@@ -1,8 +1,8 @@
 \name{scArray}
 \alias{scArray}
-\title{Get an DelayedArray object}
+\title{Get an DelayedArray instance}
 \description{
-    Gets an DelayedArray object from a single-cell GDS file.
+    Gets an DelayedArray instance from a single-cell GDS file.
 }
 \usage{
 scArray(gdsfile, varname)

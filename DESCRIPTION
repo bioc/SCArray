@@ -6,7 +6,8 @@ Version: 0.99.0
 Date: 2020-03-10
 Depends: R (>= 3.5.0), gdsfmt (>= 1.23.6), methods, DelayedArray, Rcpp
 LinkingTo: gdsfmt, Rcpp, RcppArmadillo, RcppParallel
-Imports: BiocGenerics, S4Vectors, IRanges, utils, RcppParallel
+Imports: BiocGenerics, S4Vectors, IRanges, utils, SummarizedExperiment,
+        SingleCellExperiment, RcppParallel
 Suggests: parallel, Matrix, crayon, RUnit, knitr
 Authors@R: c(person("Xiuwen", "Zheng", role=c("aut", "cre"),
         email="xiuwen.zheng@abbvie.com", comment=c(ORCID="0000-0002-1390-0708")))
@@ -14,7 +15,8 @@ Description: Large-scale single-cell RNA-seq data manipulation and statistical
         analysis with scalable implementation of generalized mixed models and
         principal component analysis. The package integrates sparse matrices in
         Genomic Data Structure (GDS) files and the Bioconductor infrastructure
-        framework to provide out-of-memory data storage and manipulation in R.
+        framework to provide out-of-memory data storage and manipulation using
+        R programming.
 License: GPL-3
 SystemRequirements: C++11, GNU make
 VignetteBuilder: knitr

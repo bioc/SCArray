@@ -1,1 +1,1 @@
-BiocGenerics:::testPackage("SCArray")
+# BiocGenerics:::testPackage("SCArray")

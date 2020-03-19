@@ -64,6 +64,20 @@
 
 
 
+# return total # of features, and total # of samples
+.gettotnum <- function(gdsfile)
+{
+    nfeat <- objdesp.gdsn(index.gdsn(gdsfile, "feature.id"))$dim
+    if (length(nfeat) != 1L)
+        stop("Invalid dimension of 'feature.id'.")
+    nsamp <- objdesp.gdsn(index.gdsn(gdsfile, "sample.id"))$dim
+    if (length(nsamp) != 1L)
+        stop("Invalid dimension of 'sample.id'.")
+    c(nfeat, nsamp)
+}
+
+
+
 #######################################################################
 # Open a SCArray GDS file
 #
@@ -129,4 +143,45 @@ scArray <- function(gdsfile, varname)
     # new DelayedArray
     seed <- SCArraySeed(gdsfile, varname)
     DelayedArray(seed)
+}
+
+
+#######################################################################
+# Get an SingleCellExperiment/SummarizedExperiment instance
+#
+scExperiment <- function(gdsfile, sc=TRUE, use.names=TRUE)
+{
+    # check
+    stopifnot(inherits(gdsfile, "SCArrayFileClass"))
+    stopifnot(is.logical(sc), length(sc)==1L)
+    stopifnot(is.logical(use.names), length(use.names)==1L)
+
+    # dimnames
+    dm <- .gettotnum(gdsfile)
+    feat_id <- samp_id <- NULL
+    if (use.names)
+    {
+        feat_id <- read.gdsn(index.gdsn(gdsfile, "feature.id"))
+        samp_id <- read.gdsn(index.gdsn(gdsfile, "sample.id"))
+    }
+    # list all assays
+    nm <- ls.gdsn(gdsfile, include.dirs=FALSE)
+    x <- sapply(nm, function(s) {
+        dp <- objdesp.gdsn(index.gdsn(gdsfile, s))
+        identical(dp$dim, dm)
+    })
+    lst <- lapply(nm[x], function(s) {
+        m <- scArray(gdsfile, s)
+        rownames(m) <- feat_id; colnames(m) <- samp_id
+        m
+    })
+    names(lst) <- nm[x]
+
+    # output
+    if (isTRUE(sc))
+    {
+        SingleCellExperiment(assays=lst)
+    } else {
+        SummarizedExperiment(assays=lst)
+    }
 }

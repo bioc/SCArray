@@ -16,7 +16,7 @@ scClose(gdsfile)
 
 \author{Xiuwen Zheng}
 \seealso{
-    \code{\link{seqOpen}}
+    \code{\link{scOpen}}
 }
 
 \keyword{GDS}
