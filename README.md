@@ -7,7 +7,7 @@ Large-scale single-cell RNA-seq data manipulation and analysis using GDS files
 
 ## Features
 
-Large-scale single-cell RNA-seq data manipulation and statistical analysis with scalable implementation of generalized mixed models and principal component analysis. The package integrates sparse matrices in Genomic Data Structure (GDS) files and the Bioconductor infrastructure framework to provide out-of-memory data storage and manipulation using R programming.
+Large-scale single-cell RNA-seq data manipulation and statistical analysis with scalable implementation of generalized mixed models and principal component analysis. The package integrates sparse matrices in Genomic Data Structure (GDS) files and the Bioconductor infrastructure framework to provide out-of-memory data storage and manipulation using the R programming language.
 
 
 ## Bioconductor:

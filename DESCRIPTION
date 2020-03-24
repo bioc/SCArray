@@ -16,7 +16,7 @@ Description: Large-scale single-cell RNA-seq data manipulation and statistical
         principal component analysis. The package integrates sparse matrices in
         Genomic Data Structure (GDS) files and the Bioconductor infrastructure
         framework to provide out-of-memory data storage and manipulation using
-        R programming.
+        the R programming language.
 License: GPL-3
 SystemRequirements: C++11, GNU make
 VignetteBuilder: knitr

@@ -37,6 +37,7 @@ setValidity("SCArrayFileClass", function(object)
 setClass("SCArraySeed", contains="Array",
     slots = c(
         gds = "SCArrayFileClass",
+        filename = "character",
         varname = "character",
         dim  = "integer",
         dimnames = "list"
@@ -52,7 +53,7 @@ setMethod("DelayedArray", "SCArraySeed",
 setMethod("show", "SCArraySeed", function(object)
     {
         .cat("SCArraySeed\n",
-            "File: ", object@gds$filename, "\n",
+            "File: ", object@filename, "\n",
             "Array node: ", object@varname, "\n",
             "Dim: ", paste(object@dim, collapse=" x "))
     }
@@ -98,7 +99,7 @@ SCArraySeed <- function(gds, varname)
         stop("'", varname, "' is not an array.")
     dm <- dp$dim
     # output
-    new2("SCArraySeed", gds=gds, varname=varname, dim=dm,
-        dimnames=vector("list", length(dm)))
+    new2("SCArraySeed", gds=gds, filename=gds$filename, varname=varname,
+        dim=dm, dimnames=vector("list", length(dm)))
 }
 

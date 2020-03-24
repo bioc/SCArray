@@ -5,7 +5,7 @@
     Gets an instance of SingleCellExperiment or SummarizedExperiment.
 }
 \usage{
-scExperiment(gdsfile, sc=TRUE, use.names=TRUE)
+scExperiment(gdsfile, sc=TRUE, use.names=TRUE, load.row=TRUE, load.col=TRUE)
 }
 \arguments{
     \item{gdsfile}{a single-cell GDS object with class \code{SCArrayFileClass}}
@@ -13,6 +13,10 @@ scExperiment(gdsfile, sc=TRUE, use.names=TRUE)
         otherwise an instance of \code{SummarizedExperiment}}
     \item{use.names}{if \code{TRUE}, load \code{dimnames} from 'feature.id' and
         'sample.id'}
+    \item{load.row}{\code{TRUE} for loading \code{rowData} from the gds node
+        "feature.data" in \code{gdsfile}}
+    \item{load.col}{\code{TRUE} for loading \code{colData} from the gds node
+        "sample.data" in \code{gdsfile}}
 }
 \value{
     Return an instance of \code{\link{SingleCellExperiment}} or
