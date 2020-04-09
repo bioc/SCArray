@@ -8,7 +8,8 @@
 scArray(gdsfile, varname)
 }
 \arguments{
-    \item{gdsfile}{a single-cell GDS object with class \code{SCArrayFileClass}}
+    \item{gdsfile}{character for a file name, or a single-cell GDS object with
+        class \code{SCArrayFileClass}}
     \item{varname}{character for the node name in the GDS file}
 }
 \value{

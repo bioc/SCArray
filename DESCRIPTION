@@ -4,7 +4,7 @@ Title: Large-scale single-cell RNA-seq data manipulation and analysis with
         efficient algorithms
 Version: 0.99.0
 Date: 2020-03-10
-Depends: R (>= 3.5.0), gdsfmt (>= 1.23.6), methods, DelayedArray, Rcpp
+Depends: R (>= 3.5.0), gdsfmt (>= 1.23.9), methods, DelayedArray, Rcpp
 LinkingTo: gdsfmt, Rcpp, RcppArmadillo, RcppParallel
 Imports: BiocGenerics, S4Vectors, IRanges, utils, SummarizedExperiment,
         SingleCellExperiment, RcppParallel

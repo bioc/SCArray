@@ -139,6 +139,8 @@ scClose <- function(gdsfile)
 scArray <- function(gdsfile, varname)
 {
     # check
+    if (is.character(gdsfile))
+        gdsfile <- scOpen(gdsfile, readonly=TRUE, allow.duplicate=TRUE)
     stopifnot(inherits(gdsfile, "SCArrayFileClass"))
     # new DelayedArray
     seed <- SCArraySeed(gdsfile, varname)
@@ -153,6 +155,8 @@ scExperiment <- function(gdsfile, sc=TRUE, use.names=TRUE, load.row=TRUE,
     load.col=TRUE)
 {
     # check
+    if (is.character(gdsfile))
+        gdsfile <- scOpen(gdsfile, readonly=TRUE, allow.duplicate=TRUE)
     stopifnot(inherits(gdsfile, "SCArrayFileClass"))
     stopifnot(is.logical(sc), length(sc)==1L)
     stopifnot(is.logical(use.names), length(use.names)==1L)
@@ -211,9 +215,15 @@ scExperiment <- function(gdsfile, sc=TRUE, use.names=TRUE, load.row=TRUE,
     # output
     if (isTRUE(sc))
     {
-        SingleCellExperiment(assays=lst, rowData=rowdat, colData=coldat)
+        if (is.null(coldat))
+            SingleCellExperiment(assays=lst, rowData=rowdat)
+        else
+            SingleCellExperiment(assays=lst, rowData=rowdat, colData=coldat)
     } else {
-        SummarizedExperiment(assays=lst, rowData=rowdat, colData=coldat)
+        if (is.null(coldat))
+            SummarizedExperiment(assays=lst, rowData=rowdat)
+        else
+            SummarizedExperiment(assays=lst, rowData=rowdat, colData=coldat)
     }
 }
 
