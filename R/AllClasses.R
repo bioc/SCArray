@@ -66,6 +66,7 @@ setMethod("extract_array", "SCArraySeed", function(x, index)
         ans_dim <- DelayedArray:::get_Nindex_lengths(index, dim(x))
         if (any(ans_dim == 0L))
         {
+            gdsfmt:::.reopen(x@gds)
             tp <- objdesp.gdsn(index.gdsn(x@gds, x@varname))$type
             ans <- switch(as.character(tp),
                 Raw=raw(), Integer=integer(), Logical=logical(),
@@ -73,6 +74,7 @@ setMethod("extract_array", "SCArraySeed", function(x, index)
                 stop("Unsupported data type: ", tp))
             dim(ans) <- ans_dim
         } else {
+            gdsfmt:::.reopen(x@gds)
             nd <- index.gdsn(x@gds, x@varname)
             ans <- readex.gdsn(nd, index, .sparse=FALSE)
             if (!is.array(ans))  ## 'ans' must be an array
