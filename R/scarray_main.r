@@ -299,7 +299,7 @@ scConvGDS <- function(obj, outfn, save.sp=TRUE,
             storage=st)
         mt <- assaylst[[i]]
         blockApply(mt, function(x) { append.gdsn(nd, x); NULL },
-            grid=colGrid(mt), BPPARAM=NULL)
+            grid=colAutoGrid(mt), BPPARAM=NULL)
         readmode.gdsn(nd)
         if (verbose) { cat("  |"); print(nd) }
     }
