@@ -151,14 +151,14 @@ scArray <- function(gdsfile, varname)
 #######################################################################
 # Get an SingleCellExperiment/SummarizedExperiment instance
 #
-scExperiment <- function(gdsfile, sc=TRUE, use.names=TRUE, load.row=TRUE,
+scExperiment <- function(gdsfile, sce=TRUE, use.names=TRUE, load.row=TRUE,
     load.col=TRUE)
 {
     # check
     if (is.character(gdsfile))
         gdsfile <- scOpen(gdsfile, readonly=TRUE, allow.duplicate=TRUE)
     stopifnot(inherits(gdsfile, "SCArrayFileClass"))
-    stopifnot(is.logical(sc), length(sc)==1L)
+    stopifnot(is.logical(sce), length(sce)==1L)
     stopifnot(is.logical(use.names), length(use.names)==1L)
     stopifnot(is.logical(load.row), length(load.row)==1L)
     stopifnot(is.logical(load.col), length(load.col)==1L)
@@ -213,7 +213,7 @@ scExperiment <- function(gdsfile, sc=TRUE, use.names=TRUE, load.row=TRUE,
     }
 
     # output
-    if (isTRUE(sc))
+    if (isTRUE(sce))
     {
         if (is.null(coldat))
             SingleCellExperiment(assays=lst, rowData=rowdat)
@@ -297,7 +297,9 @@ scConvGDS <- function(obj, outfn, save.sp=TRUE,
         }
         nd <- add.gdsn(outf, nm, valdim=c(nr, 0L), compress=compress,
             storage=st)
-        apply(assaylst[[i]], 2L, function(x) append.gdsn(nd, x))
+        mt <- assaylst[[i]]
+        blockApply(mt, function(x) { append.gdsn(nd, x); NULL },
+            grid=colGrid(mt), BPPARAM=NULL)
         readmode.gdsn(nd)
         if (verbose) { cat("  |"); print(nd) }
     }
@@ -321,6 +323,7 @@ scConvGDS <- function(obj, outfn, save.sp=TRUE,
         for (i in seq_len(ncol(coldat)))
         {
             nm <- names(coldat)[i]
+            nm <- gsub("/", "_", nm, fixed=TRUE)
             .cat("    ", nm)
             add.gdsn(nfd, nm, coldat[,i], compress=compress, closezip=TRUE)
         }
@@ -349,4 +352,3 @@ scConvGDS <- function(obj, outfn, save.sp=TRUE,
     # output
     invisible(normalizePath(outfn))
 }
-

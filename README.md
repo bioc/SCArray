@@ -1,4 +1,4 @@
-Large-scale single-cell RNA-seq data manipulation and analysis using GDS files
+Large-scale single-cell RNA-seq data manipulation using GDS files
 ====
 
 ![GPLv3](http://www.gnu.org/graphics/gplv3-88x31.png)
@@ -7,12 +7,12 @@ Large-scale single-cell RNA-seq data manipulation and analysis using GDS files
 
 ## Features
 
-Large-scale single-cell RNA-seq data manipulation and statistical analysis with scalable implementation of generalized mixed models and principal component analysis. The package integrates sparse matrices in Genomic Data Structure (GDS) files and the Bioconductor infrastructure framework to provide out-of-memory data storage and manipulation using the R programming language.
+Large-scale single-cell RNA-seq data manipulation and statistical analysis with scalable implementation of generalized mixed models and principal component analysis. The package integrates the sparse matrix in Genomic Data Structure (GDS) files and the Bioconductor infrastructure framework to provide out-of-memory data storage and manipulation using the R programming language.
 
 
 ## Bioconductor:
 
-
+Development Version: v0.99.0 ([http://bioconductor.org/packages/devel/bioc/html/SCArray.html](http://bioconductor.org/packages/devel/bioc/html/SCArray.html))
 
 
 ## Package Maintainer
@@ -22,6 +22,11 @@ Large-scale single-cell RNA-seq data manipulation and statistical analysis with 
 
 ## Installation
 
-* Requires R (≥ v3.5.0), [gdsfmt](http://www.bioconductor.org/packages/gdsfmt) (≥ v1.23.6)
+* Requires R (≥ v3.5.0), [gdsfmt](http://www.bioconductor.org/packages/gdsfmt) (≥ v1.24.0)
 
-* Recommend [GNU GCC (≥ v6.0)](https://gcc.gnu.org), requiring C++11
+* Bioconductor repository
+```R
+if (!requireNamespace("BiocManager", quietly=TRUE))
+    install.packages("BiocManager")
+BiocManager::install("SCArray")
+```
