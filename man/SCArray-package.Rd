@@ -2,14 +2,11 @@
 \alias{SCArray-package}
 \alias{SCArray}
 \docType{package}
-\title{Large-scale single-cell RNA-seq data manipulation and analysis with
-efficient algorithms}
+\title{Large-scale single-cell RNA-seq data manipulation with GDS files}
 \description{
-    Large-scale single-cell RNA-seq data manipulation and statistical analysis
-with scalable implementation of generalized mixed models and principal component
-analysis. The package integrates sparse matrices in Genomic Data Structure (GDS)
-files and the Bioconductor infrastructure framework to provide out-of-memory
-data storage and manipulation in R.
+    The package combines sparse matrices stored in GDS files and the
+Bioconductor infrastructure framework to provide out-of-memory data storage
+and manipulation using the R programming language.
 }
 \details{
     \tabular{ll}{
@@ -17,8 +14,6 @@ data storage and manipulation in R.
         Type: \tab Package \cr
         License: \tab GPL version 3 \cr
     }
-}
-\references{
 }
 \author{
     Xiuwen Zheng \email{xiuwen.zheng@abbvie.com}

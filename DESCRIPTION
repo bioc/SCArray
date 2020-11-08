@@ -3,10 +3,9 @@ Type: Package
 Title: Large-scale single-cell RNA-seq data manipulation with GDS files
 Version: 0.99.0
 Date: 2020-11-08
-Depends: R (>= 3.5.0), gdsfmt (>= 1.23.9), methods, DelayedArray, Rcpp
-LinkingTo: gdsfmt, Rcpp, RcppArmadillo, RcppParallel
+Depends: R (>= 3.5.0), gdsfmt (>= 1.23.9), methods, DelayedArray
 Imports: BiocGenerics, S4Vectors, IRanges, utils, SummarizedExperiment,
-        SingleCellExperiment, RcppParallel
+        SingleCellExperiment
 Suggests: parallel, Matrix, crayon, RUnit, knitr
 Authors@R: c(person("Xiuwen", "Zheng", role=c("aut", "cre"),
         email="xiuwen.zheng@abbvie.com",
