@@ -22,8 +22,11 @@ scArray(gdsfile, varname)
 }
 
 \examples{
-# check
-cat("OK\n")
+# a GDS file for SingleCellExperiment
+fn <- system.file("extdata", "LaMannoBrainData.gds", package="SCArray")
+
+cnt <- scArray(fn, "counts")
+cnt
 }
 
 \keyword{GDS}

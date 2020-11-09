@@ -5,7 +5,7 @@
     Opens a single-cell GDS file.
 }
 \usage{
-scOpen(gdsfn, readonly=TRUE, allow.duplicate=FALSE)
+scOpen(gdsfn, readonly=TRUE, allow.duplicate=TRUE)
 }
 \arguments{
     \item{gdsfn}{the input file name}
@@ -20,12 +20,24 @@ scOpen(gdsfn, readonly=TRUE, allow.duplicate=FALSE)
 
 \author{Xiuwen Zheng}
 \seealso{
-    \code{\link{scClose}}
+    \code{\link{scClose}}, \code{\link{scArray}}
 }
 
 \examples{
-# check
-cat("OK\n")
+# a GDS file for SingleCellExperiment
+fn <- system.file("extdata", "LaMannoBrainData.gds", package="SCArray")
+
+# open the GDS file
+(f <- scOpen(fn))
+
+# read a GDS file
+cell.id <- read.gdsn(index.gdsn(f, "feature.id"))
+samp.id <- read.gdsn(index.gdsn(f, "sample.id"))
+
+# get a DelayedArray object
+(cnt <- scArray(f, "counts"))
+
+scClose(f)
 }
 
 \keyword{GDS}

@@ -81,7 +81,7 @@
 #######################################################################
 # Open a SCArray GDS file
 #
-scOpen <- function(gdsfn, readonly=TRUE, allow.duplicate=FALSE)
+scOpen <- function(gdsfn, readonly=TRUE, allow.duplicate=TRUE)
 {
     # check
     stopifnot(is.character(gdsfn), length(gdsfn)==1L)
