@@ -1,0 +1,60 @@
+---
+title: "Large-scale single-cell RNA-seq data manipulation with GDS files"
+author: "Dr. Xiuwen Zheng"
+date: "Nov, 2020"
+output:
+    html_document:
+        theme: default
+        highlight: tango
+        toc: yes
+    pdf_document:
+        toc: yes
+        toc_depth: 3
+vignette: >
+    %\VignetteIndexEntry{Single-cell RNA-seq data manipulation using SCArray}
+    %\VignetteKeywords{scRNAseq, GDS}
+    %\VignetteEngine{knitr::rmarkdown}
+---
+
+
+The SCArray package combines dense and sparse matrices stored in GDS files and the Bioconductor infrastructure framework `SingleCellExperiment` and `DelayedArray` to provide out-of-memory data storage and manipulation using the R programming language.
+
+
+## Format conversion
+
+```{r}
+suppressPackageStartupMessages(library(SCArray))
+suppressPackageStartupMessages(library(SingleCellExperiment))
+
+# load a SingleCellExperiment object
+fn <- system.file("extdata", "LaMannoBrainSub.rds", package="SCArray")
+sce <- readRDS(fn)
+
+# Convert it to a GDS file
+scConvGDS(sce, "test.gds")
+```
+
+
+## Single Cell Datasets
+
+```{r}
+# a GDS file for SingleCellExperiment
+fn <- system.file("extdata", "LaMannoBrainData.gds", package="SCArray")
+
+sce <- scExperiment(fn)
+sce
+
+# it is a DelayedMatrix, not loaded
+assays(sce)$counts
+
+# row and column data
+colData(sce)
+rowData(sce)
+```
+
+
+# Session Info
+
+```{r}
+sessionInfo()
+```

@@ -4,7 +4,7 @@
 \docType{package}
 \title{Large-scale single-cell RNA-seq data manipulation with GDS files}
 \description{
-    The package combines sparse matrices stored in GDS files and the
+    The package combines dense and sparse matrices stored in GDS files and the
 Bioconductor infrastructure framework to provide out-of-memory data storage
 and manipulation using the R programming language.
 }
