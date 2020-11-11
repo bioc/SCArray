@@ -3,8 +3,7 @@
 # Package name: SCArray
 #
 # Description:
-#     Large-scale single-cell RNA-seq data manipulation and analysis with
-# efficient algorithms
+#     Large-scale single-cell RNA-seq data manipulation with GDS files
 #
 # Copyright (C) 2020    Xiuwen Zheng / AbbVie-ComputationalGenomics
 # License: GPL-3
