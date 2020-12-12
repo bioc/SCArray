@@ -172,10 +172,10 @@ scExperiment <- function(gdsfile, sce=TRUE, use.names=TRUE, load.row=TRUE,
     }
     # list all assays
     nm <- ls.gdsn(gdsfile, include.dirs=FALSE)
-    x <- sapply(nm, function(s) {
+    x <- vapply(nm, FUN=function(s) {
         dp <- objdesp.gdsn(index.gdsn(gdsfile, s))
         identical(dp$dim, dm)
-    })
+    }, FUN.VALUE=TRUE)
     lst <- lapply(nm[x], function(s) {
         m <- scArray(gdsfile, s)
         rownames(m) <- feat_id; colnames(m) <- samp_id

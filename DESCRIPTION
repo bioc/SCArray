@@ -2,7 +2,7 @@ Package: SCArray
 Type: Package
 Title: Large-scale single-cell RNA-seq data manipulation with GDS files
 Version: 0.99.0
-Date: 2020-11-08
+Date: 2020-12-11
 Depends: R (>= 3.5.0), gdsfmt (>= 1.23.9), methods, DelayedArray
 Imports: BiocGenerics, S4Vectors, IRanges, utils, SummarizedExperiment,
         SingleCellExperiment
@@ -20,5 +20,4 @@ License: GPL-3
 VignetteBuilder: knitr
 ByteCompile: TRUE
 URL: https://github.com/AbbVie-ComputationalGenomics/SCArray
-biocViews: Infrastructure, DataRepresentation, SingleCell, RNASeq,
-        StatisticalMethod
+biocViews: Infrastructure, DataRepresentation, SingleCell, RNASeq

@@ -1,7 +1,7 @@
 ---
 title: "Large-scale single-cell RNA-seq data manipulation with GDS files"
 author: "Dr. Xiuwen Zheng"
-date: "Nov, 2020"
+date: "Dec, 2020"
 output:
     pdf_document:
         toc: yes
@@ -17,7 +17,21 @@ vignette: >
 ---
 
 
+## Introduction
+
 The SCArray package combines dense and sparse matrices stored in GDS files and the Bioconductor infrastructure framework (`SingleCellExperiment` and `DelayedArray`) to provide out-of-memory data storage and manipulation using the R programming language. Compared with the HDF5Array package utilizing HDF5 files, SCArray allows storing a `SingleCellExperiment` object in a single GDS file instead of multiple files. Unlike HDF5, GDS supports the direct storage of a sparse matrix without converting it to multiple vectors. SCArray provides a `SingleCellExperiment` object for downstream data analyses.
+
+
+## Installation
+
+* Requires R (>= v3.5.0), [gdsfmt](http://www.bioconductor.org/packages/gdsfmt) (>= v1.24.0)
+
+* Bioconductor repository
+```R
+if (!requireNamespace("BiocManager", quietly=TRUE))
+    install.packages("BiocManager")
+BiocManager::install("SCArray")
+```
 
 
 ## Format conversion
