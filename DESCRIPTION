@@ -2,11 +2,11 @@ Package: SCArray
 Type: Package
 Title: Large-scale single-cell RNA-seq data manipulation with GDS files
 Version: 0.99.0
-Date: 2020-12-11
-Depends: R (>= 3.5.0), gdsfmt (>= 1.23.9), methods, DelayedArray
+Date: 2020-12-12
+Depends: R (>= 3.5.0), gdsfmt (>= 1.24.0), methods, DelayedArray
 Imports: BiocGenerics, S4Vectors, IRanges, utils, SummarizedExperiment,
         SingleCellExperiment
-Suggests: parallel, Matrix, crayon, RUnit, knitr
+Suggests: parallel, Matrix, DelayedMatrixStats, crayon, RUnit, knitr
 Authors@R: c(person("Xiuwen", "Zheng", role=c("aut", "cre"),
         email="xiuwen.zheng@abbvie.com",
         comment=c(ORCID="0000-0002-1390-0708")))
@@ -14,8 +14,8 @@ Description: Provides large-scale single-cell RNA-seq data manipulation using
         Genomic Data Structure (GDS) files. It combines dense and sparse
         matrices stored in GDS files and the Bioconductor infrastructure
         framework (SingleCellExperiment and DelayedArray) to provide
-        out-of-memory data storage and manipulation using the R programming
-        language.
+        out-of-memory data storage and large-scale manipulation using the R
+        programming language.
 License: GPL-3
 VignetteBuilder: knitr
 ByteCompile: TRUE
