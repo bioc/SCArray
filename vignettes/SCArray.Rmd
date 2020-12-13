@@ -66,7 +66,31 @@ rowData(sce)
 ```
 
 
-# Session Info
+## Data Manipulation
+
+```{r}
+suppressPackageStartupMessages(library(DelayedMatrixStats))
+
+cnt <- assays(sce)$counts
+logcnt <- log2(cnt + 1)
+assays(sce)$logcounts <- logcnt
+logcnt  # DelayedMatrix
+
+cM <- DelayedMatrixStats::colMeans2(logcnt)
+str(cM)
+rM <- DelayedMatrixStats::rowMeans2(logcnt)
+str(rM)
+```
+
+```{r fig.width=4,fig.height=3}
+suppressPackageStartupMessages(library(scater))
+
+sce <- runUMAP(sce)
+plotReducedDim(sce, dimred="UMAP")
+```
+
+
+## Session Info
 
 ```{r}
 sessionInfo()
