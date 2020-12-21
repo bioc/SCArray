@@ -18,7 +18,7 @@ scArray(gdsfile, varname)
 
 \author{Xiuwen Zheng}
 \seealso{
-    \code{\link{scOpen}}, \code{\link{scClose}}
+    \code{\link{scOpen}}, \code{\link{scExperiment}}
 }
 
 \examples{

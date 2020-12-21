@@ -10,8 +10,9 @@ scExperiment(gdsfile, sce=TRUE, use.names=TRUE, load.row=TRUE, load.col=TRUE)
 \arguments{
     \item{gdsfile}{character for a file name, or a single-cell GDS object with
         class \code{SCArrayFileClass}}
-    \item{sce}{if \code{TRUE}, return an instance of \code{SingleCellExperiment};
-        otherwise an instance of \code{SummarizedExperiment}}
+    \item{sce}{if \code{TRUE}, return an instance of
+        \code{SingleCellExperiment}, otherwise an instance of
+        \code{SummarizedExperiment}}
     \item{use.names}{if \code{TRUE}, load \code{dimnames} from 'feature.id' and
         'sample.id'}
     \item{load.row}{\code{TRUE} for loading \code{rowData} from the gds node

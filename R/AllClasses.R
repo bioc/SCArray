@@ -33,6 +33,9 @@ setValidity("SCArrayFileClass", function(object)
 # See the vignette of the DelayedArray package
 #
 
+# if the file is open, no action internally
+.reopen <- function(x) gdsfmt:::.reopen(x@gds)
+
 setClass("SCArraySeed", contains="Array",
     slots = c(
         gds = "SCArrayFileClass",
@@ -63,9 +66,9 @@ setMethod("show", "SCArraySeed", function(object)
 setMethod("extract_array", "SCArraySeed", function(x, index)
     {
         ans_dim <- DelayedArray:::get_Nindex_lengths(index, dim(x))
+        .reopen(x)
         if (any(ans_dim == 0L))
         {
-            gdsfmt:::.reopen(x@gds)
             tp <- objdesp.gdsn(index.gdsn(x@gds, x@varname))$type
             ans <- switch(as.character(tp),
                 Raw=raw(), Integer=integer(), Logical=logical(),
@@ -73,13 +76,51 @@ setMethod("extract_array", "SCArraySeed", function(x, index)
                 stop("Unsupported data type: ", tp))
             dim(ans) <- ans_dim
         } else {
-            gdsfmt:::.reopen(x@gds)
             nd <- index.gdsn(x@gds, x@varname)
             ans <- readex.gdsn(nd, index, .sparse=FALSE)
             if (!is.array(ans))  ## 'ans' must be an array
                 dim(ans) <- ans_dim
         }
         ans
+    }
+)
+
+
+setMethod("is_sparse", "SCArraySeed", function(x)
+    {
+        .reopen(x)
+        tr <- objdesp.gdsn(index.gdsn(x@gds, x@varname))$trait
+        tr %in% c("SparseReal32", "SparseReal64", "SparseInt8", "SparseUInt8",
+            "SparseInt16", "SparseUInt16", "SparseInt32", "SparseUInt32",
+            "SparseInt64", "SparseUInt64")
+    }
+)
+
+
+# extract an array from DelayedArray
+setMethod("extract_sparse_array", "SCArraySeed", function(x, index)
+    {
+        ans_dim <- DelayedArray:::get_Nindex_lengths(index, dim(x))
+        .reopen(x)
+        if (any(ans_dim == 0L))
+        {
+            tp <- objdesp.gdsn(index.gdsn(x@gds, x@varname))$type
+            ans <- switch(as.character(tp),
+                Raw=raw(), Integer=integer(), Logical=logical(),
+                Real=double(), String=character(),
+                stop("Unsupported data type: ", tp))
+            SparseArraySeed(0L, nzdata=ans)
+        } else {
+            nd <- index.gdsn(x@gds, x@varname)
+            ans <- readex.gdsn(nd, index, .sparse=TRUE)
+            if (inherits(ans, "gds_sparse_nz_class"))
+            {
+                SparseArraySeed(ans_dim, ans$nzindex, ans$nzdata, check=FALSE)
+            } else {
+                # ans could be a dense array, dgCMatrix or lgCMatrix
+                as(ans, "SparseArraySeed")
+            }
+        }
     }
 )
 

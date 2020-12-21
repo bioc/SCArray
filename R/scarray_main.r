@@ -110,7 +110,7 @@ scOpen <- function(gdsfn, readonly=TRUE, allow.duplicate=TRUE)
         if (!identical(version, "v1.0"))
         {
             stop(sprintf(
-                "FileVersion '%s' (should be v1.0), consider using the updated SCArray",
+                "FileVersion '%s' (should be v1.0), consider updating SCArray",
                 as.character(version)))
         }
     }
