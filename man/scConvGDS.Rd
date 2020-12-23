@@ -9,7 +9,7 @@ scConvGDS(obj, outfn, save.sp=TRUE, type=c("float32", "float64", "int32"),
     compress="LZMA_RA", clean=TRUE, verbose=TRUE)
 }
 \arguments{
-    \item{obj}{a matrix, DelayedMatrix, SummarizedExperiment or
+    \item{obj}{a dense/sparse matrix, DelayedMatrix, SummarizedExperiment or
         SingleCellExperiment}
     \item{outfn}{the output file name in GDS format}
     \item{save.sp}{if \code{TRUE}, save it to a sparse matrix in GDS; otherwise,

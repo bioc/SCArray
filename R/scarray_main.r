@@ -24,43 +24,6 @@
 
 .pretty <- function(x) prettyNum(x, big.mark=",", scientific=FALSE)
 
-.pretty_size <- function(x)
-{
-    if (x >= 1024^4)
-        sprintf("%.1fT", x / 1024^4)
-    else if (x >= 1024^3)
-        sprintf("%.1fG", x / 1024^3)
-    else if (x >= 1024^2)
-        sprintf("%.1fM", x / 1024^2)
-    else if (x >= 1024L)
-        sprintf("%.1fK", x / 1024)
-    else if (x > 1L)
-        sprintf("%g bytes", x)
-    else
-        "0 byte"
-}
-
-
-.cfunction <- function(name)
-{
-    fn <- function(x) NULL
-    f <- quote(.Call(SC_ExternalName1, x))
-    f[[1L]] <- .Call
-    f[[2L]] <- getNativeSymbolInfo(name, "SCArray")$address
-    body(fn) <- f
-    fn
-}
-
-.cfunction2 <- function(name)
-{
-    fn <- function(x, y) NULL
-    f <- quote(.Call(SC_ExternalName2, x, y))
-    f[[1L]] <- .Call
-    f[[2L]] <- getNativeSymbolInfo(name, "SCArray")$address
-    body(fn) <- f
-    fn
-}
-
 
 
 # return total # of features, and total # of samples
@@ -91,7 +54,7 @@ scOpen <- function(gdsfn, readonly=TRUE, allow.duplicate=TRUE)
     ans <- openfn.gds(gdsfn, readonly=readonly, allow.fork=TRUE,
         allow.duplicate=allow.duplicate)
 
-    # FileFormat
+    # check the file format
     a <- get.attr.gdsn(ans$root)
     if (!is.null(a$FileFormat))
     {
@@ -103,19 +66,7 @@ scOpen <- function(gdsfn, readonly=TRUE, allow.duplicate=TRUE)
             stop("'FileFormat' should be 'SC_ARRAY'")
     }
 
-    # FileVersion
-    version <- a$FileVersion
-    if (!is.null(version))
-    {
-        if (!identical(version, "v1.0"))
-        {
-            stop(sprintf(
-                "FileVersion '%s' (should be v1.0), consider updating SCArray",
-                as.character(version)))
-        }
-    }
-
-    # .Call(SEQ_File_Init, ans)
+    # output
     new("SCArrayFileClass", ans)
 }
 
@@ -173,8 +124,7 @@ scExperiment <- function(gdsfile, sce=TRUE, use.names=TRUE, load.row=TRUE,
     # list all assays
     nm <- ls.gdsn(gdsfile, include.dirs=FALSE)
     x <- vapply(nm, FUN=function(s) {
-        dp <- objdesp.gdsn(index.gdsn(gdsfile, s))
-        identical(dp$dim, dm)
+        identical(objdesp.gdsn(index.gdsn(gdsfile, s))$dim, dm)
     }, FUN.VALUE=TRUE)
     lst <- lapply(nm[x], function(s) {
         m <- scArray(gdsfile, s)
@@ -183,28 +133,28 @@ scExperiment <- function(gdsfile, sce=TRUE, use.names=TRUE, load.row=TRUE,
     })
     names(lst) <- nm[x]
 
-    # rowData
+    # load rowData
     rowdat <- NULL
     if (isTRUE(load.row))
     {
         nd <- index.gdsn(gdsfile, "feature.data", silent=TRUE)
         if (!is.null(nd))
         {
-            nmlst <- ls.gdsn(nd)
+            nmlst <- ls.gdsn(nd, include.hidden=FALSE)
             v <- lapply(nmlst, function(nm) read.gdsn(index.gdsn(nd, nm)))
             names(v) <- nmlst
             rowdat <- DataFrame(v, row.names=feat_id)
         }
     }
 
-    # colData
+    # load colData
     coldat <- NULL
     if (isTRUE(load.col))
     {
         nd <- index.gdsn(gdsfile, "sample.data", silent=TRUE)
         if (!is.null(nd))
         {
-            nmlst <- ls.gdsn(nd)
+            nmlst <- ls.gdsn(nd, include.hidden=FALSE)
             v <- lapply(nmlst, function(nm) read.gdsn(index.gdsn(nd, nm)))
             names(v) <- nmlst
             coldat <- DataFrame(v, row.names=samp_id)
@@ -214,11 +164,13 @@ scExperiment <- function(gdsfile, sce=TRUE, use.names=TRUE, load.row=TRUE,
     # output
     if (isTRUE(sce))
     {
+        # return a SingleCellExperiment object
         if (is.null(coldat))
             SingleCellExperiment(assays=lst, rowData=rowdat)
         else
             SingleCellExperiment(assays=lst, rowData=rowdat, colData=coldat)
     } else {
+        # return a SummarizedExperiment object
         if (is.null(coldat))
             SummarizedExperiment(assays=lst, rowData=rowdat)
         else
@@ -236,8 +188,9 @@ scConvGDS <- function(obj, outfn, save.sp=TRUE,
     verbose=TRUE)
 {
     # check
-    stopifnot(is.matrix(obj) | is(obj, "DelayedMatrix") |
-        is(obj, "SingleCellExperiment") | is(obj, "SummarizedExperiment"))
+    stopifnot(is.matrix(obj) | inherits(obj, "Matrix") |
+        is(obj, "DelayedMatrix") | is(obj, "SingleCellExperiment") |
+        is(obj, "SummarizedExperiment"))
     stopifnot(is.character(outfn), length(outfn)==1L)
     stopifnot(is.logical(save.sp), length(save.sp)==1L)
     stopifnot(is.character(compress), length(compress)==1L)
@@ -249,11 +202,11 @@ scConvGDS <- function(obj, outfn, save.sp=TRUE,
     rownm <- colnm <- rowdat <- coldat <- metadat <- NULL
     nr <- nc <- 0L
     lst <- list()
-    if (is.matrix(obj) || is(obj, "DelayedMatrix"))
+    if (is.matrix(obj) || inherits(obj, "Matrix") || is(obj, "DelayedMatrix"))
     {
         rownm <- rownames(obj); colnm <- colnames(obj)
         nr <- nrow(obj); nc <- ncol(obj)
-        assaylst$counts <- obj
+        assaylst <- list(counts=obj)
     } else if (is(obj, "SingleCellExperiment") |
         is(obj, "SummarizedExperiment"))
     {
@@ -268,8 +221,11 @@ scConvGDS <- function(obj, outfn, save.sp=TRUE,
         metadat <- metadata(obj)
     }
 
+    # need rownames and colnames
     if (is.null(rownm)) rownm <- seq_len(nr)
+    if (anyDuplicated(rownm)) stop("rownames should be unique.")
     if (is.null(colnm)) colnm <- seq_len(nc)
+    if (anyDuplicated(colnm)) stop("colnames should be unique.")
 
     # create a gds file
     if (verbose) .cat("Output: ", outfn)
@@ -279,10 +235,12 @@ scConvGDS <- function(obj, outfn, save.sp=TRUE,
     put.attr.gdsn(outf$root, "FileVersion", "v1.0")
     if (verbose) .cat("Compression: ", compress)
 
+    # add feature and sample IDs
     add.gdsn(outf, "feature.id", rownm, compress=compress, closezip=TRUE)
     add.gdsn(outf, "sample.id", colnm, compress=compress, closezip=TRUE)
     if (verbose) .cat("Dimension: ", nr, " x ", nc)
 
+    # assays
     if (verbose) .cat("Assay List:")
     for (i in seq_along(assaylst))
     {
@@ -303,6 +261,7 @@ scConvGDS <- function(obj, outfn, save.sp=TRUE,
         if (verbose) { cat("  |"); print(nd) }
     }
 
+    # add rowData to feature.data
     nfd <- addfolder.gdsn(outf, "feature.data")
     if (!is.null(rowdat))
     {
@@ -315,6 +274,7 @@ scConvGDS <- function(obj, outfn, save.sp=TRUE,
         }
     }
 
+    # add colData to sample.data
     nfd <- addfolder.gdsn(outf, "sample.data")
     if (!is.null(coldat))
     {
@@ -328,6 +288,7 @@ scConvGDS <- function(obj, outfn, save.sp=TRUE,
         }
     }
 
+    # add metadata to meta.data
     nfd <- addfolder.gdsn(outf, "meta.data")
     if (length(metadat) > 0L)
     {
@@ -345,7 +306,7 @@ scConvGDS <- function(obj, outfn, save.sp=TRUE,
     # close file
     on.exit()
     closefn.gds(outf)
-    .cat("Done.")
+    cat("Done.\n")
     if (isTRUE(clean)) cleanup.gds(outfn)
 
     # output

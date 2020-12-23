@@ -1,7 +1,7 @@
 ---
 title: "Large-scale single-cell RNA-seq data manipulation with GDS files"
-author: "Dr. Xiuwen Zheng"
-date: "Dec, 2020"
+author: "Dr. Xiuwen Zheng (Genomics Research Center, AbbVie)"
+date: "Dec 2020"
 output:
     html_document:
         theme: default
@@ -11,6 +11,7 @@ vignette: >
     %\VignetteIndexEntry{Single-cell RNA-seq data manipulation using GDS files}
     %\VignetteKeywords{scRNAseq, GDS}
     %\VignetteEngine{knitr::rmarkdown}
+    %\VignetteEncoding{UTF-8}
 ---
 
 
@@ -20,8 +21,8 @@ The SCArray package provides large-scale single-cell RNA-seq data manipulation
 using Genomic Data Structure
 ([GDS](http://www.bioconductor.org/packages/gdsfmt)) files. It combines
 dense/sparse matrices stored in GDS files and the Bioconductor infrastructure
-framework ([SingleCellExperiment]
-(http://www.bioconductor.org/packages/SingleCellExperiment)
+framework
+([SingleCellExperiment](http://www.bioconductor.org/packages/SingleCellExperiment)
 and [DelayedArray](http://www.bioconductor.org/packages/DelayedArray)) to
 provide out-of-memory data storage and manipulation using the R programming
 language. As shown in the figure, SCArray provides a `SingleCellExperiment`
@@ -29,7 +30,7 @@ object for downstream data analyses. GDS is an alternative to HDF5.
 Unlike HDF5, GDS supports the direct storage of a sparse matrix without
 converting it to multiple vectors.
 
-![Figure 1: Workflow of SCArray](scarray_fig.svg)
+![**Figure 1**: Workflow of SCArray](scarray_fig.svg)
 
 
 ## Installation
@@ -38,7 +39,9 @@ converting it to multiple vectors.
 [gdsfmt](http://www.bioconductor.org/packages/gdsfmt) (>= v1.24.0)
 
 * Bioconductor repository
-```R
+
+To install this package, start R and enter:
+```{R, eval=FALSE}
 if (!requireNamespace("BiocManager", quietly=TRUE))
     install.packages("BiocManager")
 BiocManager::install("SCArray")
@@ -46,6 +49,12 @@ BiocManager::install("SCArray")
 
 
 ## Format conversion
+
+### Conversion from SingleCellExperiment
+
+The SCArray package can convert a single-cell experiment object
+(SingleCellExperiment) to a GDS file using the function `scConvGDS()`.
+For example,
 
 ```{r}
 suppressPackageStartupMessages(library(SCArray))
@@ -55,49 +64,100 @@ suppressPackageStartupMessages(library(SingleCellExperiment))
 fn <- system.file("extdata", "LaMannoBrainSub.rds", package="SCArray")
 sce <- readRDS(fn)
 
-# Convert it to a GDS file
+# convert to a GDS file
 scConvGDS(sce, "test.gds")
+
+# list data structure in the GDS file
+(f <- scOpen("test.gds")); scClose(f)
+```
+
+### Conversion from a matrix
+
+The input of `scConvGDS()` can be a dense or sparse matrix for count data:
+
+```{r}
+library(Matrix)
+
+cnt <- matrix(0, nrow=4, ncol=8)
+set.seed(100); cnt[sample.int(length(cnt), 8)] <- rpois(8, 4)
+(cnt <- as(cnt, "dgCMatrix"))
+
+# convert to a GDS file
+scConvGDS(cnt, "test.gds")
 ```
 
 
-## Single Cell Datasets
+## Single cell datasets
+
+When a single-cell GDS file is available, users can use `scExperiment()` to
+load a SingleCellExperiment object from the GDS file. The assay data in the
+SingleCellExperiment object are DelayedMatrix objects to avoid the memory limit.
 
 ```{r}
-# a GDS file for SingleCellExperiment
-fn <- system.file("extdata", "LaMannoBrainData.gds", package="SCArray")
-
+# a GDS file in the SCArray package
+(fn <- system.file("extdata", "LaMannoBrainData.gds", package="SCArray"))
+# load a SingleCellExperiment object from the file
 sce <- scExperiment(fn)
 sce
 
-# it is a DelayedMatrix, not loaded
+# it is a DelayedMatrix (the whole matrix is not loaded)
 assays(sce)$counts
 
-# row and column data
+# column data
 colData(sce)
+# row data
 rowData(sce)
 ```
 
 
-## Data Manipulation
+## Data Manipulation and Analysis
+
+SCArray provides a `SingleCellExperiment` object for downstream data analyses.
+At first, we create a log count matrix `logcnt` from the count matrix.
+Note that `logcnt` is also a DelayedMatrix without actually generating the
+whole matrix.
+
+```{r}
+cnt <- assays(sce)$counts
+logcnt <- log2(cnt + 1)
+assays(sce)$logcounts <- logcnt
+logcnt
+```
+
+### Mean for each column or row
+
+The
+[DelayedMatrixStats](http://www.bioconductor.org/packages/DelayedMatrixStats)
+package provides functions operating on rows and columns of DelayedMatrix
+objects. For example, we can calculate the mean for each column or row of
+the log count matrix.
 
 ```{r}
 suppressPackageStartupMessages(library(DelayedMatrixStats))
 
-cnt <- assays(sce)$counts
-logcnt <- log2(cnt + 1)
-assays(sce)$logcounts <- logcnt
-logcnt  # DelayedMatrix
-
-cM <- DelayedMatrixStats::colMeans2(logcnt)
-str(cM)
-rM <- DelayedMatrixStats::rowMeans2(logcnt)
-str(rM)
+col_mean <- DelayedMatrixStats::colMeans2(logcnt)
+str(col_mean)
+row_mean <- DelayedMatrixStats::rowMeans2(logcnt)
+str(row_mean)
 ```
 
-```{r fig.width=4,fig.height=3}
+### UMAP analysis
+
+The [scater](http://www.bioconductor.org/packages/scater) package can perform
+the uniform manifold approximation and projection (UMAP) for the cell data,
+based on the data in a SingleCellExperiment object.
+
+```{r}
 suppressPackageStartupMessages(library(scater))
 
+# run umap analysis
 sce <- runUMAP(sce)
+```
+
+`plotReducedDim()` plots cell-level reduced dimension results (UMAP) stored
+in the SingleCellExperiment object:
+
+```{r fig.width=4,fig.height=3}
 plotReducedDim(sce, dimred="UMAP")
 ```
 
@@ -105,6 +165,7 @@ plotReducedDim(sce, dimred="UMAP")
 ## Session Info
 
 ```{r}
+# print version information about R, the OS and attached or loaded packages
 sessionInfo()
 ```
 
