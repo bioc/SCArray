@@ -3,7 +3,7 @@ citHeader("To cite SCArray in publications use:")
 citEntry(entry="Misc",
     title = "Large-scale single-cell RNA-seq data manipulation with GDS files",
     author = personList(person("Xiuwen", "Zheng")),
-    year = "2020",
+    year = "2021",
     url = "http://www.bioconductor.org/packages/SCArray",
-    textVersion = "Zheng X (2020). SCArray: Large-scale single-cell RNA-seq data manipulation with GDS files. R package version 0.99.0"
+    textVersion = "Zheng X (2021). SCArray: Large-scale single-cell RNA-seq data manipulation with GDS files. R package version 0.99"
 )
