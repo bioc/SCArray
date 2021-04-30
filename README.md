@@ -12,7 +12,7 @@ Large-scale single-cell RNA-seq data manipulation and statistical analysis with 
 
 ## Bioconductor:
 
-Development Version: v0.99.0 ([http://bioconductor.org/packages/devel/bioc/html/SCArray.html](http://bioconductor.org/packages/devel/bioc/html/SCArray.html))
+v1.0.0 ([http://bioconductor.org/packages/SCArray/](http://bioconductor.org/packages/SCArray/))
 
 
 ## Package Maintainer

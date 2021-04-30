@@ -5,7 +5,7 @@
 # Description:
 #     Large-scale single-cell RNA-seq data manipulation with GDS files
 #
-# Copyright (C) 2020    Xiuwen Zheng / AbbVie-ComputationalGenomics
+# Copyright (C) 2020-2021    Xiuwen Zheng / AbbVie-ComputationalGenomics
 # License: GPL-3
 #
 
@@ -26,6 +26,11 @@ setValidity("SCArrayFileClass", function(object)
         TRUE
     }
 )
+
+# to avoid dropping the names in S3 class 'gds.class'
+setMethod("updateObject", "SCArrayFileClass",
+    function(object, ..., verbose=FALSE) object)
+
 
 
 #######################################################################
