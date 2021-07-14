@@ -5,7 +5,7 @@
 # Description:
 #     Large-scale single-cell RNA-seq data manipulation with GDS files
 #
-# Copyright (C) 2020    Xiuwen Zheng / AbbVie-ComputationalGenomics
+# Copyright (C) 2020-2021    Xiuwen Zheng (@AbbVie-ComputationalGenomics)
 # License: GPL-3
 #
 
@@ -129,6 +129,10 @@ scExperiment <- function(gdsfile, sce=TRUE, use.names=TRUE, load.row=TRUE,
     lst <- lapply(nm[x], function(s) {
         m <- scArray(gdsfile, s)
         rownames(m) <- feat_id; colnames(m) <- samp_id
+        if (length(dim(m))==2L)
+            m <- as(m, "SC_GDSMatrix")
+        else
+            m <- as(m, "SC_GDSArray")
         m
     })
     names(lst) <- nm[x]
@@ -312,3 +316,52 @@ scConvGDS <- function(obj, outfn, save.sp=TRUE,
     # output
     invisible(normalizePath(outfn))
 }
+
+
+#######################################################################
+#
+#
+#
+scObj <- function(obj, verbose=TRUE)
+{
+    # check
+    stopifnot(is.logical(verbose), length(verbose)==1L)
+
+    if (is(obj, "SummarizedExperiment"))
+    {
+        lst <- assays(obj)
+        nm <- names(lst)
+        for (i in seq_along(lst))
+        {
+            v <- lst[[i]]
+            if (is(v, "DelayedMatrix") && !is(v, "SC_GDSMatrix"))
+            {
+                assay(obj, i) <- as(v, "SC_GDSMatrix")
+                if (verbose)
+                    cat(nm[i], "==> SC_GDSMatrix\n")
+            } else if (is(v, "DelayedArray") && !is(v, "SC_GDSArray"))
+            {
+                assay(obj, i) <- as(v, "SC_GDSArray")
+                if (verbose)
+                    cat(nm[i], "==> SC_GDSArray\n")
+            }
+        }
+        obj
+    } else if (is(obj, "DelayedArray"))
+    {
+        if (is(obj, "DelayedMatrix") && !is(obj, "SC_GDSMatrix"))
+        {
+            obj <- as(obj, "SC_GDSMatrix")
+            if (verbose)
+                cat("==> SC_GDSMatrix\n")
+        } else if (is(v, "DelayedArray") && !is(v, "SC_GDSArray"))
+        {
+            obj <- as(v, "SC_GDSArray")
+            if (verbose)
+                cat("==> SC_GDSArray\n")
+        }
+        obj
+    } else
+        stop("obj should be a SummarizedExperiment object.")
+}
+

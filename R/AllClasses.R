@@ -5,7 +5,7 @@
 # Description:
 #     Large-scale single-cell RNA-seq data manipulation with GDS files
 #
-# Copyright (C) 2020-2021    Xiuwen Zheng / AbbVie-ComputationalGenomics
+# Copyright (C) 2020-2021    Xiuwen Zheng (@AbbVie-ComputationalGenomics)
 # License: GPL-3
 #
 
@@ -59,10 +59,15 @@ setClass("SCArraySeed", contains="Array",
     )
 )
 
+setClass("SC_GDSArray", contains="DelayedArray")
+
+setClass("SC_GDSMatrix", contains=c("DelayedMatrix", "SC_GDSArray"))
+
+
 
 # set the DelayedArray function
 setMethod("DelayedArray", "SCArraySeed",
-    function(seed) new_DelayedArray(seed, Class="DelayedArray")
+    function(seed) new_DelayedArray(seed, Class="SC_GDSArray")
 )
 
 
@@ -171,3 +176,6 @@ SCArraySeed <- function(gds, varname)
     new2("SCArraySeed", gds=gds, filename=gds$filename, varname=varname,
         dim=dm, dimnames=vector("list", length(dm)))
 }
+
+
+setMethod("path", "SCArraySeed", function(object) object@filename)

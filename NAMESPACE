@@ -1,5 +1,5 @@
 # Export the following names
-# useDynLib(SCArray,)
+useDynLib(SCArray, c_rowVars_update, c_rowVars_final)
 
 # Export all names
 exportPattern("^sc*")
@@ -11,8 +11,8 @@ import(S4Vectors)
 import(IRanges)
 import(DelayedArray)
 import(gdsfmt)
-importFrom(SummarizedExperiment, SummarizedExperiment, colData, rowData, assays)
+import(DelayedMatrixStats)
+importFrom(SummarizedExperiment, SummarizedExperiment, colData, rowData,
+    assays, assay, "assay<-")
 importFrom(SingleCellExperiment, SingleCellExperiment)
-# import(Matrix)
-# importFrom(stats, )
 importFrom(utils, object.size, packageVersion, str)
