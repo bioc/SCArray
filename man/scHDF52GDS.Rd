@@ -1,0 +1,38 @@
+\name{scHDF2GDS}
+\alias{scHDF2GDS}
+\title{Convert HDF5 files to GDS}
+\description{
+    Creates a single-cell GDS file from Cell Ranger HDF5 files.
+}
+\usage{
+scHDF2GDS(h5_fn, outfn, group="matrix", feature_path=character(),
+    type=c("float32", "float64", "int32"), compress="LZMA_RA", clean=TRUE,
+    verbose=TRUE)
+}
+\arguments{
+    \item{h5_fn}{the input HDF5 file name}
+    \item{outfn}{the output file name in GDS format}
+    \item{group}{the name of the group in the HDF5 file where the sparse
+        matrix is stored}
+    \item{feature_path}{a character vector for feature variables, otherwise
+        detecting automatically}
+    \item{type}{numeric data type in the output file}
+    \item{compress}{the compression method, see \code{\link{add.gdsn}}}
+    \item{clean}{TRUE}
+    \item{verbose}{if \code{TRUE}, show information}
+}
+\value{
+    Return the path of the output file.
+}
+
+\author{Xiuwen Zheng}
+\seealso{
+    \code{\link{scConvGDS}}, \code{\link{scMEX2GDS}}
+}
+
+\examples{
+}
+
+\keyword{CellRanger}
+\keyword{GDS}
+\keyword{SingleCell}

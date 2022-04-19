@@ -15,4 +15,4 @@ import(DelayedMatrixStats)
 importFrom(SummarizedExperiment, SummarizedExperiment, colData, rowData,
     assays, assay, "assay<-")
 importFrom(SingleCellExperiment, SingleCellExperiment)
-importFrom(utils, object.size, packageVersion, str)
+importFrom(utils, object.size, packageVersion, read.delim, str)

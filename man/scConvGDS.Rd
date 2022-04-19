@@ -25,7 +25,8 @@ scConvGDS(obj, outfn, save.sp=TRUE, type=c("float32", "float64", "int32"),
 
 \author{Xiuwen Zheng}
 \seealso{
-    \code{\link{scOpen}}, \code{\link{scClose}}
+    \code{\link{scOpen}}, \code{\link{scClose}},
+    \code{\link{scMEX2GDS}}, \code{\link{scHDF2GDS}}
 }
 
 \examples{
