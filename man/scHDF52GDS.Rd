@@ -5,7 +5,7 @@
     Creates a single-cell GDS file from Cell Ranger HDF5 files.
 }
 \usage{
-scHDF2GDS(h5_fn, outfn, group="matrix", feature_path=character(),
+scHDF2GDS(h5_fn, outfn, group=c("matrix", "mm10"), feature_path=character(),
     type=c("float32", "float64", "int32"), compress="LZMA_RA", clean=TRUE,
     verbose=TRUE)
 }
@@ -13,7 +13,9 @@ scHDF2GDS(h5_fn, outfn, group="matrix", feature_path=character(),
     \item{h5_fn}{the input HDF5 file name}
     \item{outfn}{the output file name in GDS format}
     \item{group}{the name of the group in the HDF5 file where the sparse
-        matrix is stored}
+        matrix is stored; if there are more than one group names, the first
+        existing group in the HDF5 file is used; \code{"mm10"} is usually
+        used for 10x Genomics datasets}
     \item{feature_path}{a character vector for feature variables, otherwise
         detecting automatically}
     \item{type}{numeric data type in the output file}

@@ -337,6 +337,10 @@ scMEX2GDS <- function(feature_fn, barcode_fn, mtx_fn, outfn,
     stopifnot(is.logical(clean), length(clean)==1L)
     stopifnot(is.logical(verbose), length(verbose)==1L)
 
+    # check package
+    if (!require("Matrix", quietly=TRUE))
+        stop("The package 'Matrix' should be installed.")
+
     # load features
     if (anyDuplicated(feature_colnm))
         stop("'feature_colnm' should be unique.")
@@ -397,7 +401,7 @@ scMEX2GDS <- function(feature_fn, barcode_fn, mtx_fn, outfn,
     blockApply(mt, function(x) { append.gdsn(nd, x); NULL },
         grid=colAutoGrid(mt), BPPARAM=NULL)
     readmode.gdsn(nd)
-    if (verbose) { cat("  |"); print(nd) }
+    if (verbose) { cat("    |"); print(nd) }
 
     # add rowData to feature.data
     nfd <- addfolder.gdsn(outf, "feature.data")
@@ -429,14 +433,15 @@ scMEX2GDS <- function(feature_fn, barcode_fn, mtx_fn, outfn,
 #######################################################################
 # Convert CellRanger HDF5 files to GDS
 #
-scHDF2GDS <- function(h5_fn, outfn, group="matrix", feature_path=character(),
+scHDF2GDS <- function(h5_fn, outfn, group=c("matrix", "mm10"),
+    feature_path=character(),
     type=c("float32", "float64", "int32"), compress="LZMA_RA", clean=TRUE,
     verbose=TRUE)
 {
     # check
     stopifnot(is.character(h5_fn), length(h5_fn)==1L)
     stopifnot(is.character(outfn), length(outfn)==1L)
-    stopifnot(is.character(group), length(group)==1L)
+    stopifnot(is.character(group), length(group)>=1L)
     stopifnot(is.character(feature_path))
     if (anyDuplicated(feature_path))
         stop("'feature_path' should be unique.")
@@ -445,16 +450,26 @@ scHDF2GDS <- function(h5_fn, outfn, group="matrix", feature_path=character(),
     stopifnot(is.logical(clean), length(clean)==1L)
     stopifnot(is.logical(verbose), length(verbose)==1L)
 
+    # check packages
+    if (!require("rhdf5", quietly=TRUE))
+        stop("The package 'rhdf5' should be installed.")
+    if (!suppressPackageStartupMessages(require("HDF5Array", quietly=TRUE)))
+        stop("The package 'HDF5Array' should be installed.")
+
     # load HDF5 count matrix
+    a <- rhdf5::h5ls(h5_fn, all=T)
+    a$group[a$group == "/"] <- ""
+    a$path <- substring(paste(a$group, a$name, sep="/"), 2L)
     sep <- ifelse(grepl("/$", group), "", "/")
-    if (verbose)
-    {
-        .cat("Load ", sQuote(h5_fn))
-        cat("   ", group)
-    }
+    if (verbose) .cat("Load ", sQuote(h5_fn))
+    g <- intersect(group, a$path)
+    if (length(g) == 0L)
+        stop("No hdf5 group for sparse matrix.")
+    group <- g[1L]
+    if (verbose) cat("   ", group)
     mt <- HDF5Array::H5SparseMatrix(h5_fn, group)
     if (verbose)
-        .cat("  [", class(mt), ": ", nrow(mt), "x", ncol(mt), "]")
+        .cat("    [", class(mt)[1L], ", ", nrow(mt), " x ", ncol(mt), "]")
 
     # load barcodes
     nm <- paste(group, "barcodes", sep=sep)
@@ -472,8 +487,6 @@ scHDF2GDS <- function(h5_fn, outfn, group="matrix", feature_path=character(),
             "features/id", "features/name", "features/feature_type",
             "features/genome")
     }
-    a <- rhdf5::h5ls(h5_fn, all=T)
-    a$path <- substring(paste(a$group, a$name, sep="/"), 2L)
     test_path <- paste(group, feature_path, sep="/")
     used <- intersect(test_path, a$path)
     if (length(used) == 0L)
@@ -511,7 +524,7 @@ scHDF2GDS <- function(h5_fn, outfn, group="matrix", feature_path=character(),
     blockApply(mt, function(x) { append.gdsn(nd, x); NULL },
         grid=colAutoGrid(mt), BPPARAM=NULL)
     readmode.gdsn(nd)
-    if (verbose) { cat("  |"); print(nd) }
+    if (verbose) { cat("    |"); print(nd) }
 
     # add rowData to feature.data
     nfd <- addfolder.gdsn(outf, "feature.data")
