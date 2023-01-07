@@ -5,13 +5,20 @@
 # Description:
 #     Large-scale single-cell RNA-seq data manipulation with GDS files
 #
-# Copyright (C) 2020-2022    Xiuwen Zheng (@AbbVie-ComputationalGenomics)
+# Copyright (C) 2020-2023    Xiuwen Zheng (@AbbVie-ComputationalGenomics)
 # License: GPL-3
 #
 
 
 # Package-wide variable
 .packageEnv <- new.env()
+
+q_Matrix <- quote(suppressPackageStartupMessages(
+    require("Matrix", quietly=TRUE)))
+q_rhdf5  <- quote(suppressPackageStartupMessages(
+    require("rhdf5", quietly=TRUE)))
+q_HDF5Array <- quote(suppressPackageStartupMessages(
+    require("HDF5Array", quietly=TRUE)))
 
 
 #######################################################################
@@ -52,7 +59,7 @@ scOpen <- function(gdsfn, readonly=TRUE, allow.duplicate=TRUE)
 
     # open the file
     ans <- openfn.gds(gdsfn, readonly=readonly, allow.fork=TRUE,
-        allow.duplicate=allow.duplicate)
+        allow.duplicate=allow.duplicate, use.abspath=FALSE)
 
     # check the file format
     a <- get.attr.gdsn(ans$root)
@@ -90,7 +97,9 @@ scArray <- function(gdsfile, varname)
 {
     # check
     if (is.character(gdsfile))
+    {
         gdsfile <- scOpen(gdsfile, readonly=TRUE, allow.duplicate=TRUE)
+    }
     stopifnot(inherits(gdsfile, "SCArrayFileClass"))
     # new DelayedArray
     seed <- SCArraySeed(gdsfile, varname)
@@ -106,7 +115,9 @@ scExperiment <- function(gdsfile, sce=TRUE, use.names=TRUE, load.row=TRUE,
 {
     # check
     if (is.character(gdsfile))
+    {
         gdsfile <- scOpen(gdsfile, readonly=TRUE, allow.duplicate=TRUE)
+    }
     stopifnot(inherits(gdsfile, "SCArrayFileClass"))
     stopifnot(is.logical(sce), length(sce)==1L)
     stopifnot(is.logical(use.names), length(use.names)==1L)
@@ -338,7 +349,7 @@ scMEX2GDS <- function(feature_fn, barcode_fn, mtx_fn, outfn,
     stopifnot(is.logical(verbose), length(verbose)==1L)
 
     # check package
-    if (!require("Matrix", quietly=TRUE))
+    if (!eval(q_Matrix))
         stop("The package 'Matrix' should be installed.")
 
     # load features
@@ -451,9 +462,9 @@ scHDF2GDS <- function(h5_fn, outfn, group=c("matrix", "mm10"),
     stopifnot(is.logical(verbose), length(verbose)==1L)
 
     # check packages
-    if (!require("rhdf5", quietly=TRUE))
+    if (!eval(q_rhdf5))
         stop("The package 'rhdf5' should be installed.")
-    if (!suppressPackageStartupMessages(require("HDF5Array", quietly=TRUE)))
+    if (!eval(q_HDF5Array))
         stop("The package 'HDF5Array' should be installed.")
 
     # load HDF5 count matrix

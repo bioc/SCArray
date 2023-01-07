@@ -5,7 +5,7 @@
 # Description:
 #     Large-scale single-cell RNA-seq data manipulation with GDS files
 #
-# Copyright (C) 2020-2021    Xiuwen Zheng (@AbbVie-ComputationalGenomics)
+# Copyright (C) 2020-2023    Xiuwen Zheng (@AbbVie-ComputationalGenomics)
 # License: GPL-3
 #
 
@@ -54,7 +54,7 @@ setClass("SCArraySeed", contains="Array",
         gds = "SCArrayFileClass",
         filename = "character",
         varname = "character",
-        dim  = "integer",
+        dim = "integer",
         dimnames = "list"
     )
 )

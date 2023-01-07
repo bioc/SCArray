@@ -1,7 +1,7 @@
 // ===============================================================
 //
 // SCArray R package
-// Copyright (C) 2021   Xiuwen Zheng (@AbbVie-ComputationalGenomics)
+// Copyright (C) 2021-2023    Xiuwen Zheng
 // All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -24,43 +24,177 @@
 extern "C"
 {
 
-SEXP c_rowVars_update(SEXP mat, SEXP pm)
+inline static void get_nrow_ncol(SEXP mat, int &nrow, int &ncol)
 {
-	// get nrow and ncol
 	SEXP dm = GET_DIM(mat);
 	if (Rf_isNull(dm) || Rf_length(dm) != 2)
 		Rf_error("It should be a numeric matrix.");
 	int *pdm = INTEGER(dm);
-	int nrow=pdm[0], ncol=pdm[1];
+	nrow = pdm[0];
+	ncol = pdm[1];
+}
+
+// ====  rowSums  ====
+
+SEXP c_rowSums_update(SEXP mat, SEXP val, SEXP narm)
+{
+	// get nrow and ncol
+	int nrow, ncol;
+	get_nrow_ncol(mat, nrow, ncol);
 	// do
-	double v, *po = REAL(pm);
-	double *pS=po, *pS2=po+nrow, *pN=po+2*nrow;
 	const double *p = REAL(mat);
-	for (int i=0; i < ncol; i++, p+=nrow)
+	double *pv = REAL(val), v;
+	if (Rf_asLogical(narm) == TRUE)
 	{
-		for (int j=0; j < nrow; j++)
+		for (int i=0; i < ncol; i++, p+=nrow)
 		{
-			if (R_FINITE(v=p[j]))
+			for (int j=0; j < nrow; j++)
+				if (!ISNAN(v=p[j])) pv[j] += v;
+		}
+	} else {
+		for (int i=0; i < ncol; i++, p+=nrow)
+		{
+			for (int j=0; j < nrow; j++)
+				pv[j] += p[j];
+		}
+	}
+	// output
+	return val;
+}
+
+
+// ====  rowProds  ====
+
+SEXP c_rowProds_update(SEXP mat, SEXP val, SEXP narm)
+{
+	// get nrow and ncol
+	int nrow, ncol;
+	get_nrow_ncol(mat, nrow, ncol);
+	// do
+	const double *p = REAL(mat);
+	double *pv = REAL(val), v;
+	if (Rf_asLogical(narm) == TRUE)
+	{
+		for (int i=0; i < ncol; i++, p+=nrow)
+		{
+			for (int j=0; j < nrow; j++)
+				if (!ISNAN(v=p[j])) pv[j] *= v;
+		}
+	} else {
+		for (int i=0; i < ncol; i++, p+=nrow)
+		{
+			for (int j=0; j < nrow; j++)
+				pv[j] *= p[j];
+		}
+	}
+	// output
+	return val;
+}
+
+
+// ====  rowMeans  ====
+
+SEXP c_rowMeans_update(SEXP mat, SEXP val, SEXP narm)
+{
+	// get nrow and ncol
+	int nrow, ncol;
+	get_nrow_ncol(mat, nrow, ncol);
+	// do
+	const double *p = REAL(mat);
+	double *pv = REAL(val), *pn = pv+nrow, v;
+	if (Rf_asLogical(narm) == TRUE)
+	{
+		for (int i=0; i < ncol; i++, p+=nrow)
+		{
+			for (int j=0; j < nrow; j++)
 			{
-				pS[j] += v; pS2[j] += v*v; 
-				pN[j] ++;
+				if (!ISNAN(v=p[j]))
+				{
+					pv[j] += v; pn[j] ++;
+				}
+			}
+		}
+	} else {
+		for (int i=0; i < ncol; i++, p+=nrow)
+		{
+			for (int j=0; j < nrow; j++)
+				pv[j] += p[j];
+		}
+		for (int j=0; j < nrow; j++) pn[j] += ncol;
+	}
+	// output
+	return val;
+}
+
+SEXP c_rowMeans_final(SEXP val)
+{
+	const size_t n = Rf_xlength(val) / 2;
+	const double *sv = REAL(val), *sn = sv + n;
+	SEXP ans = NEW_NUMERIC(n);
+	double *p = REAL(ans);
+	for (size_t i=0; i < n; i++) p[i] = sv[i] / sn[i];
+	return ans;
+}
+
+
+// ====  rowVars  ====
+
+SEXP c_rowVars_update(SEXP mat, SEXP val, SEXP narm, SEXP center)
+{
+	const bool na_rm = (Rf_asLogical(narm) == TRUE);
+	// get nrow and ncol
+	int nrow, ncol;
+	get_nrow_ncol(mat, nrow, ncol);
+	// do
+	double *pS=REAL(val), *pS2=pS+nrow, *pN=pS+2*nrow, v;
+	const double *p = REAL(mat);
+	if (Rf_isNull(center))
+	{
+		for (int i=0; i < ncol; i++, p+=nrow)
+		{
+			for (int j=0; j < nrow; j++)
+			{
+				v = p[j];
+				if (!na_rm || !ISNAN(v))
+				{
+					pS[j] += v; pS2[j] += v*v; pN[j] ++;
+				}
+			}
+		}
+	} else {
+		const double *pC = REAL(center);
+		for (int i=0; i < ncol; i++, p+=nrow)
+		{
+			for (int j=0; j < nrow; j++)
+			{
+				if (!na_rm || !ISNAN(p[j]))
+				{
+					v = p[j] - pC[j]; pS[j] += v*v; pN[j] ++;
+				}
 			}
 		}
 	}
 	// output
-	return pm;
+	return val;
 }
 
-SEXP c_rowVars_final(SEXP pm)
+SEXP c_rowVars_final(SEXP val, SEXP center)
 {
-	const size_t n = Rf_xlength(pm) / 3;
-	const double *po = REAL(pm);
-	const double *pS=po, *pS2=po+n, *pN=po+2*n;
+	const bool has_no_center = Rf_isNull(center);
+	const size_t n = Rf_xlength(val) / 3;
+	const double *pS=REAL(val), *pS2=pS+n, *pN=pS+2*n;
 	SEXP ans = NEW_NUMERIC(n);
 	double *p = REAL(ans);
-	for (size_t i=0; i < n; i++)
-		p[i] = (pS2[i] - pS[i]*pS[i]/pN[i]) / (pN[i]-1);
+	if (has_no_center)
+	{
+		for (size_t i=0; i < n; i++)
+			p[i] = (pN[i]>1) ? (pS2[i] - pS[i]*pS[i]/pN[i]) / (pN[i]-1) : NA_REAL;
+	} else {
+		for (size_t i=0; i < n; i++)
+			p[i] = (pN[i]>1) ? pS[i] / (pN[i]-1) : NA_REAL;
+	}
 	return ans;
 }
+
 
 }
