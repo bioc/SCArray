@@ -1,8 +1,9 @@
 # Export the following names
 useDynLib(SCArray,
-    c_rowSums_update, c_rowProds_update,
-    c_rowMeans_update, c_rowMeans_final,
-    c_rowVars_update, c_rowVars_final)
+    c_rowSums, c_rowProds,
+    c_rowMins, c_colMins, c_rowMaxs, c_colMaxs, c_rowRanges, c_colRanges,
+    c_rowMeans, c_rowMeans_final, c_colMeans,
+    c_rowVars, c_rowVars_final, c_colVars)
 
 # Export all names
 exportPattern("^sc*")

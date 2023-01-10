@@ -15,6 +15,19 @@
 \alias{colProds}
 \alias{colProds,SC_GDSMatrix-method}
 
+\alias{rowMins}
+\alias{rowMins,SC_GDSMatrix-method}
+\alias{colMins}
+\alias{colMins,SC_GDSMatrix-method}
+\alias{rowMaxs}
+\alias{rowMaxs,SC_GDSMatrix-method}
+\alias{colMaxs}
+\alias{colMaxs,SC_GDSMatrix-method}
+\alias{rowRanges}
+\alias{rowRanges,SC_GDSMatrix-method}
+\alias{colRanges}
+\alias{colRanges,SC_GDSMatrix-method}
+
 \alias{rowMeans}
 \alias{rowMeans,SC_GDSMatrix-method}
 \alias{colMeans}
@@ -35,14 +48,11 @@
 \alias{colSds,SC_GDSMatrix-method}
 
 
-\title{SC_GDSMatrix row/col summarization}
-
+\title{SC_GDSMatrix row/column summarization}
 \description{
-    Only a small number of row/col summarization methods are provided by
-  the \pkg{DelayedArray} package.
-
-  See the \pkg{DelayedMatrixStats} package for an extensive set of
-  row/col summarization methods.
+    The row/column summarization methods for the SC_GDSMatrix matrix,
+extending the S4 methods in the \pkg{DelayedArray} and \pkg{DelayedMatrixStats}
+packages.
 }
 
 \usage{
@@ -61,9 +71,15 @@
 
 \S4method{rowVars}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, center=NULL, ..., useNames=NA)
 \S4method{colVars}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, center=NULL, ..., useNames=NA)
-
 \S4method{rowSds}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, center=NULL, ..., useNames=NA)
 \S4method{colSds}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, center=NULL, ..., useNames=NA)
+
+\S4method{rowMins}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE)
+\S4method{colMins}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE)
+\S4method{rowMaxs}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE)
+\S4method{colMaxs}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE)
+\S4method{rowRanges}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE)
+\S4method{colRanges}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE)
 }
 
 \arguments{
@@ -83,21 +99,14 @@ the GDS file.
 }
 
 \seealso{
-  \itemize{
-    \item The \pkg{DelayedMatrixStats} package for more row/col summarization
-          methods for \link{DelayedMatrix} objects.
-
-    \item \code{\link[base]{rowSums}} in the \pkg{base} package and
-          \code{\link[matrixStats]{rowMaxs}} in the \pkg{matrixStats} package
-          for row/col summarization of an ordinary matrix.
-
-    \item \link{DelayedMatrix-utils} for other common operations on
-          \link{DelayedMatrix} objects.
-
-    \item \link{DelayedMatrix} objects.
-
-    \item \link[base]{matrix} objects in base R.
-  }
+    \itemize{
+        \item The \pkg{DelayedMatrixStats} package for more row/column
+            summarization methods for \link{DelayedMatrix} objects.
+        \item \link{DelayedMatrix-utils} for other common operations on
+            \link{DelayedMatrix} objects.
+        \item \link{DelayedMatrix} objects.
+        \item \link[base]{matrix} objects in base R.
+    }
 }
 
 \examples{

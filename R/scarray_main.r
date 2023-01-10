@@ -563,12 +563,26 @@ scHDF2GDS <- function(h5_fn, outfn, group=c("matrix", "mm10"),
 #
 #
 #
-scObj <- function(obj, verbose=TRUE)
+scObj <- function(obj, verbose=FALSE)
 {
     # check
     stopifnot(is.logical(verbose), length(verbose)==1L)
-
-    if (is(obj, "SummarizedExperiment"))
+    # do
+    if (is(obj, "DelayedArray"))
+    {
+        if (is(obj, "DelayedMatrix") && !is(obj, "SC_GDSMatrix"))
+        {
+            obj <- as(obj, "SC_GDSMatrix")
+            if (verbose)
+                cat("==> SC_GDSMatrix\n")
+        } else if (is(v, "DelayedArray") && !is(v, "SC_GDSArray"))
+        {
+            obj <- as(v, "SC_GDSArray")
+            if (verbose)
+                cat("==> SC_GDSArray\n")
+        }
+        obj
+    } else if (is(obj, "SummarizedExperiment"))
     {
         lst <- assays(obj)
         nm <- names(lst)
@@ -586,20 +600,6 @@ scObj <- function(obj, verbose=TRUE)
                 if (verbose)
                     cat(nm[i], "==> SC_GDSArray\n")
             }
-        }
-        obj
-    } else if (is(obj, "DelayedArray"))
-    {
-        if (is(obj, "DelayedMatrix") && !is(obj, "SC_GDSMatrix"))
-        {
-            obj <- as(obj, "SC_GDSMatrix")
-            if (verbose)
-                cat("==> SC_GDSMatrix\n")
-        } else if (is(v, "DelayedArray") && !is(v, "SC_GDSArray"))
-        {
-            obj <- as(v, "SC_GDSArray")
-            if (verbose)
-                cat("==> SC_GDSArray\n")
         }
         obj
     } else

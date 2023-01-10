@@ -23,6 +23,9 @@ scHDF2GDS(h5_fn, outfn, group=c("matrix", "mm10"), feature_path=character(),
     \item{clean}{TRUE}
     \item{verbose}{if \code{TRUE}, show information}
 }
+\details{
+    The packages \pkg{rhdf5} and \pkg{HDF5Array} should be installed.
+}
 \value{
     Return the path of the output file.
 }

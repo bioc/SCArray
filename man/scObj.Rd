@@ -1,11 +1,12 @@
 \name{scObj}
 \alias{scObj}
-\title{Seed-aware DelayedArray Object}
+\title{DelayedArray Object in GDS}
 \description{
-    Convert to SC_GDSArray for utilizing seed-aware DelayedArray functions.
+    Convert to SC_GDSArray/SC_GDSMatrix for utilizing seed-aware DelayedArray
+functions.
 }
 \usage{
-scObj(obj, verbose=TRUE)
+scObj(obj, verbose=FALSE)
 }
 \arguments{
     \item{obj}{a SummarizedExperiment, SingleCellExperiment or DelayedArray
@@ -13,7 +14,7 @@ scObj(obj, verbose=TRUE)
     \item{verbose}{if TRUE, show information}
 }
 \value{
-    Return an object with \code{SC_GDSMatrix}/\code{SC_GDSArray}.
+    Return an object with the class \code{SC_GDSMatrix} or \code{SC_GDSArray}.
 }
 
 \author{Xiuwen Zheng}

@@ -24,7 +24,7 @@ Package News: [NEWS](./NEWS)
 
 ## Installation
 
-* Requires R (≥ v3.5.0), [gdsfmt](http://www.bioconductor.org/packages/gdsfmt) (≥ v1.24.0)
+* Requires R (≥ v3.5.0), [gdsfmt](http://www.bioconductor.org/packages/gdsfmt) (≥ v1.35.4)
 
 * Bioconductor repository
 ```R
