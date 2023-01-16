@@ -1,10 +1,13 @@
-CHANGES IN VERSION 1.7.2
+CHANGES IN VERSION 1.7.3
 -------------------------
+
+    o update S4 functions `[`, `[[`, aperm, Ops, Math, crossprod,
+      tcrossprod for SC_GDSArray
 
     o update S4 functions rowSums, colSums, rowSums2, colSums2, rowProds,
       colProds, rowMeans, colMeans, rowMeans2, colMeans2, rowVars, colVars,
       rowSds, colSds, rowMins, colMins, rowMaxs, colMaxs, rowRanges, colRanges
-      for the SC_GDSMatrix object
+      for SC_GDSMatrix
 
 
 CHANGES IN VERSION 1.4.0

@@ -20,9 +20,6 @@ setValidity("SCArrayFileClass", function(object)
     {
         if (!inherits(object, "gds.class"))
             return("object should inherited from 'gds.class'.")
-        var.names <- ls.gdsn(object)
-        if (!all(c("feature.id", "sample.id") %in% var.names))
-            return("feature.id and sample.id are required variables.")
         TRUE
     }
 )

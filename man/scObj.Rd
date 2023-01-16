@@ -11,10 +11,11 @@ scObj(obj, verbose=FALSE)
 \arguments{
     \item{obj}{a SummarizedExperiment, SingleCellExperiment or DelayedArray
         object}
-    \item{verbose}{if TRUE, show information}
+    \item{verbose}{if \code{TRUE}, show information}
 }
 \value{
-    Return an object with the class \code{SC_GDSMatrix} or \code{SC_GDSArray}.
+    Return the object \code{obj} with the object class \code{DelayedArray}
+replaced by the class \code{SC_GDSMatrix} or \code{SC_GDSArray}.
 }
 
 \author{Xiuwen Zheng}

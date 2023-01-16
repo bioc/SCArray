@@ -98,12 +98,15 @@ scArray <- function(gdsfile, varname)
     # check
     if (is.character(gdsfile))
     {
-        gdsfile <- scOpen(gdsfile, readonly=TRUE, allow.duplicate=TRUE)
+        stopifnot(is.character(gdsfile), length(gdsfile)==1L)
+        f <- openfn.gds(gdsfile, readonly=TRUE, allow.fork=TRUE,
+            allow.duplicate=TRUE, use.abspath=FALSE)
+        gdsfile <- new("SCArrayFileClass", f)
     }
     stopifnot(inherits(gdsfile, "SCArrayFileClass"))
-    # new DelayedArray
+    # new SC_GDSMatrix
     seed <- SCArraySeed(gdsfile, varname)
-    DelayedArray(seed)
+    as(DelayedArray(seed), "SC_GDSMatrix")
 }
 
 
@@ -141,9 +144,9 @@ scExperiment <- function(gdsfile, sce=TRUE, use.names=TRUE, load.row=TRUE,
         m <- scArray(gdsfile, s)
         rownames(m) <- feat_id; colnames(m) <- samp_id
         if (length(dim(m))==2L)
-            m <- as(m, "SC_GDSMatrix")
+            m <- as(m, SMatrix)
         else
-            m <- as(m, "SC_GDSArray")
+            m <- as(m, SClass)
         m
     })
     names(lst) <- nm[x]
@@ -568,16 +571,16 @@ scObj <- function(obj, verbose=FALSE)
     # check
     stopifnot(is.logical(verbose), length(verbose)==1L)
     # do
-    if (is(obj, "DelayedArray"))
+    if (is(obj, DClass))
     {
-        if (is(obj, "DelayedMatrix") && !is(obj, "SC_GDSMatrix"))
+        if (is(obj, "DelayedMatrix") && !is(obj, SMatrix))
         {
-            obj <- as(obj, "SC_GDSMatrix")
+            obj <- as(obj, SMatrix)
             if (verbose)
                 cat("==> SC_GDSMatrix\n")
-        } else if (is(v, "DelayedArray") && !is(v, "SC_GDSArray"))
+        } else if (is(obj, DClass) && !is(obj, SClass))
         {
-            obj <- as(v, "SC_GDSArray")
+            obj <- as(obj, SClass)
             if (verbose)
                 cat("==> SC_GDSArray\n")
         }
@@ -589,14 +592,14 @@ scObj <- function(obj, verbose=FALSE)
         for (i in seq_along(lst))
         {
             v <- lst[[i]]
-            if (is(v, "DelayedMatrix") && !is(v, "SC_GDSMatrix"))
+            if (is(v, "DelayedMatrix") && !is(v, SMatrix))
             {
-                assay(obj, i) <- as(v, "SC_GDSMatrix")
+                assay(obj, i) <- as(v, SMatrix)
                 if (verbose)
                     cat(nm[i], "==> SC_GDSMatrix\n")
-            } else if (is(v, "DelayedArray") && !is(v, "SC_GDSArray"))
+            } else if (is(v, DClass) && !is(v, SClass))
             {
-                assay(obj, i) <- as(v, "SC_GDSArray")
+                assay(obj, i) <- as(v, SClass)
                 if (verbose)
                     cat(nm[i], "==> SC_GDSArray\n")
             }

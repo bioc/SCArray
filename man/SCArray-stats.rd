@@ -15,6 +15,29 @@
 \alias{colProds}
 \alias{colProds,SC_GDSMatrix-method}
 
+\alias{rowMeans}
+\alias{rowMeans,SC_GDSMatrix-method}
+\alias{colMeans}
+\alias{colMeans,SC_GDSMatrix-method}
+\alias{rowMeans2}
+\alias{rowMeans2,SC_GDSMatrix-method}
+\alias{colMeans2}
+\alias{colMeans2,SC_GDSMatrix-method}
+\alias{rowWeightedMeans}
+\alias{rowWeightedMeans,SC_GDSMatrix-method}
+\alias{colWeightedMeans}
+\alias{colWeightedMeans,SC_GDSMatrix-method}
+
+\alias{rowVars}
+\alias{rowVars,SC_GDSMatrix-method}
+\alias{colVars}
+\alias{colVars,SC_GDSMatrix-method}
+
+\alias{rowSds}
+\alias{rowSds,SC_GDSMatrix-method}
+\alias{colSds}
+\alias{colSds,SC_GDSMatrix-method}
+
 \alias{rowMins}
 \alias{rowMins,SC_GDSMatrix-method}
 \alias{colMins}
@@ -27,25 +50,6 @@
 \alias{rowRanges,SC_GDSMatrix-method}
 \alias{colRanges}
 \alias{colRanges,SC_GDSMatrix-method}
-
-\alias{rowMeans}
-\alias{rowMeans,SC_GDSMatrix-method}
-\alias{colMeans}
-\alias{colMeans,SC_GDSMatrix-method}
-\alias{rowMeans2}
-\alias{rowMeans2,SC_GDSMatrix-method}
-\alias{colMeans2}
-\alias{colMeans2,SC_GDSMatrix-method}
-
-\alias{rowVars}
-\alias{rowVars,SC_GDSMatrix-method}
-\alias{colVars}
-\alias{colVars,SC_GDSMatrix-method}
-
-\alias{rowSds}
-\alias{rowSds,SC_GDSMatrix-method}
-\alias{colSds}
-\alias{colSds,SC_GDSMatrix-method}
 
 
 \title{SC_GDSMatrix row/column summarization}
@@ -68,6 +72,8 @@ packages.
 \S4method{colMeans}{SC_GDSMatrix}(x, na.rm=FALSE, dims=1)
 \S4method{rowMeans2}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=NA)
 \S4method{colMeans2}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=NA)
+\S4method{rowWeightedMeans}{SC_GDSMatrix}(x, w=NULL, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=NA)
+\S4method{colWeightedMeans}{SC_GDSMatrix}(x, w=NULL, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=NA)
 
 \S4method{rowVars}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, center=NULL, ..., useNames=NA)
 \S4method{colVars}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, center=NULL, ..., useNames=NA)
@@ -88,6 +94,7 @@ packages.
     \item{rows, cols}{specify the subset of rows (and/or columns) to operate
         over; if \code{NULL}, no subsetting}
     \item{na.rm}{if \code{TRUE}, missing values (NaN and NA) will be removed}
+    \item{w}{\code{NULL} or a numeric vector for weights}
     \item{center}{\code{NULL}, or a vector of pre-calculated row (column) means}
     \item{useNames}{if \code{TRUE}, the name attributes of result are set}
     \item{...}{additional arguments passed to specific methods}
