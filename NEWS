@@ -1,8 +1,8 @@
-CHANGES IN VERSION 1.7.3
+CHANGES IN VERSION 1.7.4
 -------------------------
 
-    o update S4 functions `[`, `[[`, aperm, Ops, Math, crossprod,
-      tcrossprod for SC_GDSArray
+    o update S4 functions `[`, `[[`, `names<-`, `dimnames<-`, aperm, Ops, Math,
+      crossprod, tcrossprod for SC_GDSArray
 
     o update S4 functions rowSums, colSums, rowSums2, colSums2, rowProds,
       colProds, rowMeans, colMeans, rowMeans2, colMeans2, rowVars, colVars,

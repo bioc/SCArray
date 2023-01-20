@@ -416,20 +416,195 @@ x_rowSds <- function(x, rows=NULL, cols=NULL, na.rm=FALSE, center=NULL, ...,
     useNames=NA)
 {
     x_check(x, "Calling SCArray:::x_rowSds() with %s ...")
-    v <- x_rowVars(x, rows, cols, na.rm, center, ..., useNames=useNames)
-    sqrt(v)
+    stopifnot(is.logical(na.rm), length(na.rm)==1L)
+    stopifnot(is.null(center) || is.numeric(center))
+    k <- x_type(x)
+    if (k < 3L)
+    {
+        x <- x_subset(x, rows, cols)
+        if (k == 1L)
+            v <- .x_row_vars(x, na.rm, center, ...)
+        else
+            v <- .x_col_vars(t(x), na.rm, center, ...)
+        v <- sqrt(v)
+        if (isTRUE(useNames)) names(v) <- rownames(x)
+        v
+    } else {
+        x_msg("Calling DelayedMatrixStats::rowSds() ...")
+        callNextMethod()
+    }
 }
 
 x_colSds <- function(x, rows=NULL, cols=NULL, na.rm=FALSE, center=NULL, ...,
     useNames=NA)
 {
     x_check(x, "Calling SCArray:::x_colSds() with %s ...")
-    v <- x_colVars(x, rows, cols, na.rm, center, ..., useNames=useNames)
-    sqrt(v)
+    stopifnot(is.logical(na.rm), length(na.rm)==1L)
+    stopifnot(is.null(center) || is.numeric(center))
+    k <- x_type(x)
+    if (k < 3L)
+    {
+        x <- x_subset(x, rows, cols)
+        if (k == 1L)
+            v <- .x_col_vars(x, na.rm, center, ...)
+        else
+            v <- .x_row_vars(t(x), na.rm, center, ...)
+        v <- sqrt(v)
+        if (isTRUE(useNames)) names(v) <- colnames(x)
+        v
+    } else {
+        x_msg("Calling DelayedMatrixStats::colSds() ...")
+        callNextMethod()
+    }
 }
 
 setMethod("rowSds", SMatrix, x_rowSds)
 setMethod("colSds", SMatrix, x_colSds)
+
+
+################
+
+.x_row_w_vars <- function(x, w, na.rm, ...)
+{
+    # initialize
+    stopifnot(is.numeric(w), length(w)==ncol(x))
+    if (is.integer(w)) w <- as.double(w)
+    .Call(c_init_block)
+    # block read
+    v <- blockReduce(function(bk, v, w, na.rm) {
+        .Call(c_rowWVars, bk, v, w, na.rm)
+    }, x, init=matrix(0.0, nrow=nrow(x), ncol=4L), grid=colAutoGrid(x),
+        as.sparse=NA, w=w, na.rm=na.rm)
+    # finally
+    .Call(c_rowWVars_final, v)
+}
+
+.x_col_w_vars <- function(x, w, na.rm, ...)
+{
+    # initialize
+    stopifnot(is.numeric(w), length(w)==nrow(x))
+    if (is.integer(w)) w <- as.double(w)
+    # block read
+    unlist(blockApply(x, function(bk, w, na.rm) {
+        .Call(c_colWVars, bk, w, na.rm)
+    }, grid=colAutoGrid(x), as.sparse=NA, w=w, na.rm=na.rm, ...))
+}
+
+x_rowWeightedVars <- function(x, w=NULL, rows=NULL, cols=NULL, na.rm=FALSE,
+    ..., useNames=NA)
+{
+    if (is.null(w))
+    {
+        x_rowVars(x, rows, cols, na.rm, ..., useNames=useNames)
+    } else {
+        x_check(x, "Calling SCArray:::x_rowWeightedVars() with %s ...")
+        stopifnot(is.logical(na.rm), length(na.rm)==1L)
+        k <- x_type(x)
+        if (k < 3L)
+        {
+            x <- x_subset(x, rows, cols)
+            if (k == 1L)
+                v <- .x_row_w_vars(x, w, na.rm, ...)
+            else
+                v <- .x_col_w_vars(t(x), w, na.rm, ...)
+            if (isTRUE(useNames)) names(v) <- rownames(x)
+            v
+        } else {
+            x_msg("Calling DelayedMatrixStats::rowWeightedVars() ...")
+            callNextMethod()
+        }
+    }
+}
+
+x_colWeightedVars <- function(x, w=NULL, rows=NULL, cols=NULL, na.rm=FALSE,
+    ..., useNames=NA)
+{
+    if (is.null(w))
+    {
+        x_colVars(x, rows, cols, na.rm, ..., useNames=useNames)
+    } else {
+        x_check(x, "Calling SCArray:::x_colWeightedVars() with %s ...")
+        stopifnot(is.logical(na.rm), length(na.rm)==1L)
+        k <- x_type(x)
+        if (k < 3L)
+        {
+            x <- x_subset(x, rows, cols)
+            if (k == 1L)
+                v <- .x_col_w_vars(x, w, na.rm, ...)
+            else
+                v <- .x_row_w_vars(t(x), w, na.rm, ...)
+            if (isTRUE(useNames)) names(v) <- colnames(x)
+            v
+        } else {
+            x_msg("Calling DelayedMatrixStats::colWeightedVars() ...")
+            callNextMethod()
+        }
+    }
+}
+
+setMethod("rowWeightedVars", SMatrix, x_rowWeightedVars)
+setMethod("colWeightedVars", SMatrix, x_colWeightedVars)
+
+
+################
+
+x_rowWeightedSds <- function(x, w=NULL, rows=NULL, cols=NULL, na.rm=FALSE,
+    ..., useNames=NA)
+{
+    if (is.null(w))
+    {
+        x_rowSds(x, rows, cols, na.rm, ..., useNames=useNames)
+    } else {
+        x_check(x, "Calling SCArray:::x_rowWeightedSds() with %s ...")
+        stopifnot(is.logical(na.rm), length(na.rm)==1L)
+        k <- x_type(x)
+        if (k < 3L)
+        {
+            x <- x_subset(x, rows, cols)
+            if (k == 1L)
+                v <- .x_row_w_vars(x, w, na.rm, ...)
+            else
+                v <- .x_col_w_vars(t(x), w, na.rm, ...)
+            v <- sqrt(v)
+            if (isTRUE(useNames)) names(v) <- rownames(x)
+            v
+        } else {
+            x_msg("Calling DelayedMatrixStats::rowWeightedSds() ...")
+            callNextMethod()
+        }
+    }
+}
+
+x_colWeightedSds <- function(x, w=NULL, rows=NULL, cols=NULL, na.rm=FALSE,
+    ..., useNames = NA)
+{
+    if (is.null(w))
+    {
+        x_colSds(x, rows, cols, na.rm, ..., useNames=useNames)
+    } else {
+        x_check(x, "Calling SCArray:::x_colWeightedSds() with %s ...")
+        stopifnot(is.numeric(w), length(w)==nrow(x))
+        stopifnot(is.logical(na.rm), length(na.rm)==1L)
+        k <- x_type(x)
+        if (k < 3L)
+        {
+            x <- x_subset(x, rows, cols)
+            if (k == 1L)
+                v <- .x_col_w_vars(x, w, na.rm, ...)
+            else
+                v <- .x_row_w_vars(t(x), w, na.rm, ...)
+            v <- sqrt(v)
+            if (isTRUE(useNames)) names(v) <- colnames(x)
+            v
+        } else {
+            x_msg("Calling DelayedMatrixStats::colWeightedSds() ...")
+            callNextMethod()
+        }
+    }
+}
+
+setMethod("rowWeightedSds", SMatrix, x_rowWeightedSds)
+setMethod("colWeightedSds", SMatrix, x_colWeightedSds)
 
 
 ################

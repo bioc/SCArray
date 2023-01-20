@@ -32,11 +32,19 @@
 \alias{rowVars,SC_GDSMatrix-method}
 \alias{colVars}
 \alias{colVars,SC_GDSMatrix-method}
+\alias{rowWeightedVars}
+\alias{rowWeightedVars,SC_GDSMatrix-method}
+\alias{colWeightedVars}
+\alias{colWeightedVars,SC_GDSMatrix-method}
 
 \alias{rowSds}
 \alias{rowSds,SC_GDSMatrix-method}
 \alias{colSds}
 \alias{colSds,SC_GDSMatrix-method}
+\alias{rowWeightedSds}
+\alias{rowWeightedSds,SC_GDSMatrix-method}
+\alias{colWeightedSds}
+\alias{colWeightedSds,SC_GDSMatrix-method}
 
 \alias{rowMins}
 \alias{rowMins,SC_GDSMatrix-method}
@@ -77,8 +85,13 @@ packages.
 
 \S4method{rowVars}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, center=NULL, ..., useNames=NA)
 \S4method{colVars}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, center=NULL, ..., useNames=NA)
+\S4method{rowWeightedVars}{SC_GDSMatrix}(x, w=NULL, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=NA)
+\S4method{colWeightedVars}{SC_GDSMatrix}(x, w=NULL, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=NA)
+
 \S4method{rowSds}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, center=NULL, ..., useNames=NA)
 \S4method{colSds}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, center=NULL, ..., useNames=NA)
+\S4method{rowWeightedSds}{SC_GDSMatrix}(x, w=NULL, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=NA)
+\S4method{colWeightedSds}{SC_GDSMatrix}(x, w=NULL, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=NA)
 
 \S4method{rowMins}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE)
 \S4method{colMins}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE)

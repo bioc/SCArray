@@ -15,6 +15,10 @@
 \alias{+,SC_GDSArray,missing-method}
 \alias{-}
 \alias{-,SC_GDSArray,missing-method}
+\alias{names<-}
+\alias{names<-,SC_GDSArray-method}
+\alias{dimnames<-}
+\alias{dimnames<-,SC_GDSArray,ANY-method}
 
 \title{SC_GDSArray subsetting, Ops, Math}
 \description{
@@ -30,6 +34,9 @@ object.
 
 \S4method{Ops}{SC_GDSArray}(e1, e2)
 \S4method{Math}{SC_GDSArray}(x)
+
+# names(x) <- value
+# dimnames(x) <- value
 }
 
 \arguments{
@@ -38,6 +45,8 @@ object.
     \item{drop}{if \code{TRUE} the result will be coerced to the lowest
         possible dimension}
     \item{e1, e2}{objects}
+    \item{value}{\code{NULL}, a character vector for \code{names<-} or a list
+        of character vectors for \code{dimnames<-}}
 }
 \value{
     All these operations return a SC_GDSArray or SC_GDSMatrix object.

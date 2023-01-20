@@ -609,3 +609,45 @@ scObj <- function(obj, verbose=FALSE)
         stop("obj should be a SummarizedExperiment object.")
 }
 
+
+#######################################################################
+
+scSetMax <- function(x, vmax)
+{
+    stopifnot(is(x, "SC_GDSArray"))
+    stopifnot(is.numeric(vmax), length(vmax)==1L)
+    if (is.na(vmax)) return(x)
+    x <- DelayedArray:::stash_DelayedUnaryIsoOpStack(x,
+        function(a) base::pmin(a, vmax))
+    .sc_val(x)
+}
+
+scSetMin <- function(x, vmin)
+{
+    stopifnot(is(x, "SC_GDSArray"))
+    stopifnot(is.numeric(vmin), length(vmin)==1L)
+    if (is.na(vmin)) return(x)
+    x <- DelayedArray:::stash_DelayedUnaryIsoOpStack(x,
+        function(a) base::pmax(a, vmin))
+    .sc_val(x)
+}
+
+scSetBounds <- function(x, vmin=NaN, vmax=NaN)
+{
+    stopifnot(is(x, "SC_GDSArray"))
+    stopifnot(is.numeric(vmin), length(vmin)==1L)
+    stopifnot(is.numeric(vmax), length(vmax)==1L)
+    if (!is.na(vmin) && !is.na(vmax))
+    {
+        x <- DelayedArray:::stash_DelayedUnaryIsoOpStack(x,
+            function(a) base::pmin(base::pmax(a, vmin), vmax))
+        .sc_val(x)
+    } else if (!is.na(vmin))
+    {
+        scSetMin(x, vmin)
+    } else if (!is.na(vmax))
+    {
+        scSetMax(x, vmax)
+    } else
+        x
+}

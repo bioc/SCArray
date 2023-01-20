@@ -19,7 +19,7 @@ setClass("SCArrayFileClass", contains="gds.class")
 setValidity("SCArrayFileClass", function(object)
     {
         if (!inherits(object, "gds.class"))
-            return("object should inherited from 'gds.class'.")
+            return("'object' should be inherited from 'gds.class'.")
         TRUE
     }
 )
@@ -51,8 +51,7 @@ setClass("SCArraySeed", contains="Array",
         gds = "SCArrayFileClass",
         filename = "character",
         varname = "character",
-        dim = "integer",
-        dimnames = "list"
+        dim = "integer"
     )
 )
 
@@ -170,8 +169,7 @@ SCArraySeed <- function(gds, varname)
         stop("'", varname, "' is not an array.")
     dm <- dp$dim
     # output
-    new2("SCArraySeed", gds=gds, filename=gds$filename, varname=varname,
-        dim=dm, dimnames=vector("list", length(dm)))
+    new2("SCArraySeed", gds=gds, filename=gds$filename, varname=varname, dim=dm)
 }
 
 

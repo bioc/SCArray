@@ -20,6 +20,14 @@
 #include "sc_main.h"
 
 
+// ========================
+
+static inline bool is_int(SEXP x)
+{
+	int v = TYPEOF(x);
+	return (v==INTSXP) || (v==LGLSXP);
+}
+
 // SparseArraySeed
 SparseMatrix::SparseMatrix(SEXP mat)
 {
@@ -32,7 +40,7 @@ SparseMatrix::SparseMatrix(SEXP mat)
 	nzi_r = INTEGER(ii); nzi_c = nzi_r + nnzero;
 	// slot nzdata
 	nzdata = GET_SLOT(mat, mkString("nzdata"));
-	if (TYPEOF(nzdata)!=REALSXP && TYPEOF(nzdata)!=INTSXP)
+	if (TYPEOF(nzdata)!=REALSXP && !is_int(nzdata))
 		Rf_error(err_type);
 	if (Rf_length(nzdata) != nnzero)
 		Rf_error(err_type);
@@ -64,7 +72,7 @@ void get_mat_size(SEXP mat, int &nrow, int &ncol)
 	{
 		int *p = INTEGER(GET_DIM(mat));
 		nrow = p[0]; ncol = p[1];
-		if (TYPEOF(mat)!=REALSXP && TYPEOF(mat)!=INTSXP)
+		if (TYPEOF(mat)!=REALSXP && !is_int(mat))
 			throw_error_type(mat);
 	} else if (is_sparse_seed(mat))
 	{
@@ -80,6 +88,15 @@ void get_mat_size(SEXP mat, int &nrow, int &ncol)
 
 extern "C"
 {
+
+static inline double sq(double x) { return x*x; }
+
+static inline double sum(const double x[], size_t n)
+{
+	double s = 0;
+	for (size_t i=0; i < n; i++) s += x[i];
+	return s;
+}
 
 static int block_idx_st = 0;
 
@@ -106,7 +123,7 @@ SEXP c_add_update(SEXP a, SEXP b)
 	{
 		const double *s = REAL(b);
 		for (size_t i=0; i < n; i++) p[i] += s[i];
-	} if (TYPEOF(b) == INTSXP)
+	} if (is_int(b))
 	{
 		const int *s = INTEGER(b);
 		for (size_t i=0; i < n; i++)
@@ -135,7 +152,7 @@ SEXP c_rowSums(SEXP mat, SEXP val, SEXP narm)
 		} else {
 			FOR_LOOP_i_j  pv[j] += p[j];
 		}
-	} else if (TYPEOF(mat) == INTSXP)
+	} else if (is_int(mat))
 	{
 		int *p = INTEGER(mat);
 		if (na_rm)
@@ -158,7 +175,7 @@ SEXP c_rowSums(SEXP mat, SEXP val, SEXP narm)
 				FOR_LOOP_Mi  pv[M.nzi_r[i]-1] += p[i];
 			}
 		} else {
-			int *p = INTEGER(M.nzdata);  // INTSXP
+			int *p = INTEGER(M.nzdata);  // INTSXP or LGLSXP
 			if (na_rm)
 			{
 				FOR_LOOP_Mi  if (p[i] != NA_INTEGER) pv[M.nzi_r[i]-1] += p[i];
@@ -199,7 +216,7 @@ SEXP c_colSums(SEXP mat, SEXP narm)
 				pv[i] = s;
 			}
 		}
-	} else if (TYPEOF(mat) == INTSXP)
+	} else if (is_int(mat))
 	{
 		int *p = INTEGER(mat);
 		if (na_rm)
@@ -231,7 +248,7 @@ SEXP c_colSums(SEXP mat, SEXP narm)
 				FOR_LOOP_Mi  pv[M.nzi_c[i]-1] += p[i];
 			}
 		} else {
-			int *p = INTEGER(M.nzdata);  // INTSXP
+			int *p = INTEGER(M.nzdata);  // INTSXP or LGLSXP
 			if (na_rm)
 			{
 				FOR_LOOP_Mi  if (p[i] != NA_INTEGER) pv[M.nzi_c[i]-1] += p[i];
@@ -266,7 +283,7 @@ SEXP c_rowProds(SEXP mat, SEXP val, SEXP narm)
 		} else {
 			FOR_LOOP_i_j  pv[j] *= p[j];
 		}
-	} else if (TYPEOF(mat) == INTSXP)
+	} else if (is_int(mat))
 	{
 		int *p = INTEGER(mat);
 		if (na_rm)
@@ -309,7 +326,7 @@ SEXP c_colProds(SEXP mat, SEXP narm)
 				pv[i] = s;
 			}
 		}
-	} else if (TYPEOF(mat) == INTSXP)
+	} else if (is_int(mat))
 	{
 		int *p = INTEGER(mat);
 		if (na_rm)
@@ -353,7 +370,7 @@ SEXP c_rowMeans(SEXP mat, SEXP val, SEXP narm)
 		} else {
 			FOR_LOOP_i_j  pv[j] += p[j];
 		}
-	} else if (TYPEOF(mat) == INTSXP)
+	} else if (is_int(mat))
 	{
 		const int *p = INTEGER(mat);
 		if (na_rm)
@@ -377,7 +394,7 @@ SEXP c_rowMeans(SEXP mat, SEXP val, SEXP narm)
 				FOR_LOOP_Mi  pv[M.nzi_r[i]-1] += p[i];
 			}
 		} else {
-			int *p = INTEGER(M.nzdata);  // INTSXP
+			int *p = INTEGER(M.nzdata);  // INTSXP or LGLSXP
 			if (na_rm)
 			{
 				FOR_LOOP_Mi  if (p[i] != NA_INTEGER)
@@ -433,7 +450,7 @@ SEXP c_colMeans(SEXP mat, SEXP narm)
 				pv[i] = s / nrow;
 			}
 		}
-	} else if (TYPEOF(mat) == INTSXP)
+	} else if (is_int(mat))
 	{
 		const int *p = INTEGER(mat);
 		if (na_rm)
@@ -472,7 +489,7 @@ SEXP c_colMeans(SEXP mat, SEXP narm)
 				FOR_LOOP_Mi  pv[M.nzi_c[i]-1] += p[i];
 			}
 		} else {
-			int *p = INTEGER(M.nzdata);  // INTSXP
+			int *p = INTEGER(M.nzdata);  // INTSXP or LGLSXP
 			if (na_rm)
 			{
 				FOR_LOOP_Mi  if (p[i] != NA_INTEGER)
@@ -511,7 +528,7 @@ SEXP c_rowWMeans(SEXP mat, SEXP val, SEXP w, SEXP narm)
 		} else {
 			FOR_LOOP_i_j  pv[j] += p[j]*pw[i];
 		}
-	} else if (TYPEOF(mat) == INTSXP)
+	} else if (is_int(mat))
 	{
 		const int *p = INTEGER(mat);
 		if (na_rm)
@@ -538,7 +555,7 @@ SEXP c_rowWMeans(SEXP mat, SEXP val, SEXP w, SEXP narm)
 				FOR_LOOP_Mi  pv[M.nzi_r[i]-1] += p[i]*pw[M.nzi_c[i]-1];
 			}
 		} else {
-			int *p = INTEGER(M.nzdata);  // INTSXP
+			int *p = INTEGER(M.nzdata);  // INTSXP or LGLSXP
 			if (na_rm)
 			{
 				FOR_LOOP_Mi  if (p[i] != NA_INTEGER) {
@@ -603,7 +620,7 @@ SEXP c_colWMeans(SEXP mat, SEXP w, SEXP narm)
 				pv[i] = s / sum_w;
 			}
 		}
-	} else if (TYPEOF(mat) == INTSXP)
+	} else if (is_int(mat))
 	{
 		const int *p = INTEGER(mat);
 		if (na_rm)
@@ -644,7 +661,7 @@ SEXP c_colWMeans(SEXP mat, SEXP w, SEXP narm)
 				FOR_LOOP_Mi  pv[M.nzi_c[i]-1] += p[i] * pw[M.nzi_r[i]-1];
 			}
 		} else {
-			int *p = INTEGER(M.nzdata);  // INTSXP
+			int *p = INTEGER(M.nzdata);  // INTSXP or LGLSXP
 			if (na_rm)
 			{
 				FOR_LOOP_Mi  {
@@ -700,7 +717,7 @@ SEXP c_rowVars(SEXP mat, SEXP val, SEXP narm, SEXP center)
 				FOR_LOOP_i_j  { v = p[j]-pC[j]; pS[j] += v*v; }
 			}
 		}
-	} else if (TYPEOF(mat) == INTSXP)
+	} else if (is_int(mat))
 	{
 		int *p = INTEGER(mat); double v;
 		if (no_center)
@@ -768,7 +785,7 @@ SEXP c_rowVars(SEXP mat, SEXP val, SEXP narm, SEXP center)
 				}
 			}
 		} else {
-			int *p = INTEGER(M.nzdata);  // INTSXP
+			int *p = INTEGER(M.nzdata);  // INTSXP or LGLSXP
 			double v;
 			if (no_center)
 			{
@@ -877,7 +894,7 @@ SEXP c_colVars(SEXP mat, SEXP narm, SEXP center)
 				}
 			}
 		}
-	} else if (TYPEOF(mat) == INTSXP)
+	} else if (is_int(mat))
 	{
 		const int *p = INTEGER(mat);
 		if (no_center)
@@ -951,7 +968,7 @@ SEXP c_colVars(SEXP mat, SEXP narm, SEXP center)
 					}
 				}
 			} else {
-				int *p = INTEGER(M.nzdata);  // INTSXP
+				int *p = INTEGER(M.nzdata);  // INTSXP or LGLSXP
 				double v;
 				if (na_rm)
 				{
@@ -993,7 +1010,7 @@ SEXP c_colVars(SEXP mat, SEXP narm, SEXP center)
 					}
 				}
 			} else {
-				int *p = INTEGER(M.nzdata);  // INTSXP
+				int *p = INTEGER(M.nzdata);  // INTSXP or LGLSXP
 				double v;
 				if (na_rm)
 				{
@@ -1019,6 +1036,266 @@ SEXP c_colVars(SEXP mat, SEXP narm, SEXP center)
 		}
 		// release
 		UNPROTECT(no_center + na_rm);
+	}
+	// output
+	UNPROTECT(1);
+	return Var;
+}
+
+
+// ====  rowWeightedVars & colWeightedVars  ====
+
+SEXP c_rowWVars(SEXP mat, SEXP val, SEXP w, SEXP narm)
+{
+	const bool na_rm = (Rf_asLogical(narm) == TRUE);
+	const double *pw = REAL(w) + block_idx_st;
+	int nrow, ncol;
+	get_mat_size(mat, nrow, ncol);
+	double *pS = REAL(val), *pS2 = pS+nrow, *pSW = pS+2*nrow;
+	int *pN = (int*)&pS[3*nrow];
+	// do
+	if (TYPEOF(mat) == REALSXP)
+	{
+		double *p = REAL(mat), v;
+		if (na_rm)
+		{
+			FOR_LOOP_i_j  if (!ISNAN(p[j]))
+			{
+				pSW[j] += pw[i];
+				v = p[j]*pw[i]; pS[j] += v; pS2[j] += v*v; pN[j]++;
+			}
+		} else {
+			FOR_LOOP_i_j  {
+				pSW[j] += pw[i];
+				v = p[j]*pw[i]; pS[j] += v; pS2[j] += v*v;
+			}
+			for (int j=0; j < nrow; j++) pN[j] += ncol;
+		}
+	} else if (is_int(mat))
+	{
+		int *p = INTEGER(mat); double v;
+		if (na_rm)
+		{
+			FOR_LOOP_i_j  if (p[j] != NA_INTEGER)
+			{
+				pSW[j] += pw[i];
+				v = p[j]*pw[i]; pS[j] += v; pS2[j] += v*v; pN[j]++;
+			}
+		} else {
+			FOR_LOOP_i_j  if (p[j] != NA_INTEGER)
+			{
+				pSW[j] += pw[i];
+				v = p[j]*pw[i]; pS[j] += v; pS2[j] += v*v;
+			} else {
+				pS[j] = pS2[j] = NA_REAL; break;
+			}
+			for (int j=0; j < nrow; j++) pN[j] += ncol;
+		}
+	} else if (is_sparse_seed(mat))
+	{
+		SparseMatrix M(mat);
+		// initialize
+		double sum_w = sum(pw, ncol);
+		for (int j=0; j < nrow; j++) pSW[j] += sum_w;
+		for (int j=0; j < nrow; j++) pN[j] += ncol;
+		// do sparse
+		if (TYPEOF(M.nzdata) == REALSXP)
+		{
+			double *p = REAL(M.nzdata), v;
+			if (na_rm)
+			{
+				FOR_LOOP_Mi  {
+					int c = M.nzi_c[i] - 1, r = M.nzi_r[i] - 1;
+					if (!ISNAN(p[i]))
+					{
+						v = p[i]*pw[c]; pS[r] += v; pS2[r] += v*v;
+					} else {
+						pN[r]--; pSW[r] -= pw[c];
+					}
+				}
+			} else {
+				FOR_LOOP_Mi  {
+					int c = M.nzi_c[i] - 1, r = M.nzi_r[i] - 1;
+					v = p[i]*pw[c]; pS[r] += v; pS2[r] += v*v;
+				}
+			}
+		} else {
+			int *p = INTEGER(M.nzdata);  // INTSXP or LGLSXP
+			double v;
+			if (na_rm)
+			{
+				FOR_LOOP_Mi  {
+					int c = M.nzi_c[i] - 1, r = M.nzi_r[i] - 1;
+					if (p[i] != NA_INTEGER)
+					{
+						v = p[i]*pw[c]; pS[r] += v; pS2[r] += v*v;
+					} else {
+						pN[r]--; pSW[r] -= pw[c];
+					}
+				}
+			} else {
+				FOR_LOOP_Mi  {
+					int c = M.nzi_c[i] - 1, r = M.nzi_r[i] - 1;
+					if (p[i] != NA_INTEGER)
+					{
+						v = p[i]*pw[c]; pS[r] += v; pS2[r] += v*v;
+					} else { pS[r] = pS2[r] = NA_REAL; }
+				}
+			}
+		}
+	}
+	// output
+	block_idx_st += ncol;
+	return val;
+}
+
+SEXP c_rowWVars_final(SEXP val)
+{
+	const size_t n = Rf_xlength(val) / 4;
+	const double *pS = REAL(val), *pS2 = pS+n, *pSW = pS+2*n;
+	const int *pN = (const int*)&pS[3*n];
+	SEXP ans = NEW_NUMERIC(n);
+	double *p = REAL(ans);
+	for (size_t i=0; i < n; i++)
+	{
+		double u = sq(pN[i] / pSW[i]);
+		p[i] = (pN[i]>1) ? u*(pS2[i] - pS[i]*pS[i]/pN[i]) / (pN[i]-1) : NA_REAL;
+	}
+	return ans;
+}
+
+SEXP c_colWVars(SEXP mat, SEXP w, SEXP narm)
+{
+	const bool na_rm = (Rf_asLogical(narm) == TRUE);
+	const double *pw = REAL(w);
+	int nrow, ncol;
+	get_mat_size(mat, nrow, ncol);
+	// output variable
+	SEXP Var = PROTECT(NEW_NUMERIC(ncol));
+	double *pv = REAL(Var);
+	// do
+	if (TYPEOF(mat) == REALSXP)
+	{
+		const double *p = REAL(mat);
+		if (na_rm)
+		{
+			FOR_LOOP_i {
+				double s=0, s2=0, sw=0, v; int n=0;
+				for (int j=0; j < nrow; j++)
+					if (!ISNAN(p[j]))
+					{
+						sw += pw[j];
+						v = p[j]*pw[j]; s += v; s2 += v*v; n++;
+					}
+				pv[i] = (n>1) ? sq(n/sw)*(s2 - s*s/n) / (n-1) : NA_REAL;
+			}
+		} else {
+			double u = sq(nrow / sum(pw, nrow));
+			FOR_LOOP_i {
+				double s=0, s2=0, v;
+				for (int j=0; j < nrow; j++)
+					{ v = p[j]*pw[j]; s += v; s2 += v*v; }
+				pv[i] = (nrow>1) ? u*(s2 - s*s/nrow) / (nrow-1) : NA_REAL;
+			}
+		}
+	} else if (is_int(mat))
+	{
+		const int *p = INTEGER(mat);
+		if (na_rm)
+		{
+			FOR_LOOP_i {
+				double s=0, s2=0, sw=0, v; int n=0;
+				for (int j=0; j < nrow; j++)
+					if (p[j] != NA_INTEGER)
+					{
+						sw += pw[j];
+						v = p[j]*pw[j]; s += v; s2 += v*v; n++;
+					}
+				pv[i] = (n>1) ? sq(n/sw)*(s2 - s*s/n) / (n-1) : NA_REAL;
+			}
+		} else {
+			double u = sq(nrow / sum(pw, nrow));
+			FOR_LOOP_i {
+				double s=0, s2=0, v;
+				for (int j=0; j < nrow; j++)
+					if (p[j] != NA_INTEGER) { v = p[j]*pw[j]; s += v; s2 += v*v; }
+					else { s = s2 = NA_REAL; break; }
+				pv[i] = (nrow>1) ? u*(s2 - s*s/nrow) / (nrow-1) : NA_REAL;
+			}
+		}
+	} else if (is_sparse_seed(mat))
+	{
+		SparseMatrix M(mat);
+		// initialize
+		int *pN=NULL;
+		if (na_rm)
+		{
+			pN = INTEGER(PROTECT(NEW_INTEGER(ncol)));
+			for (int i=0; i < ncol; i++) pN[i] = nrow;
+		}
+		// do sparse
+		memset(pv, 0, sizeof(double)*ncol);
+		double *p2 = REAL(PROTECT(NEW_NUMERIC(ncol*2)));
+		memset(p2, 0, sizeof(double)*ncol);
+		double *sw = p2 + ncol;
+		double sum_w = sum(pw, nrow);
+		for (int i=0; i < ncol; i++) sw[i] = sum_w;
+
+		if (TYPEOF(M.nzdata) == REALSXP)
+		{
+			double *p = REAL(M.nzdata), v;
+			if (na_rm)
+			{
+				FOR_LOOP_Mi  {
+					int c = M.nzi_c[i] - 1, r = M.nzi_r[i] - 1;
+					if (!ISNAN(p[i]))
+					{
+						v = p[i]*pw[r]; pv[c] += v; p2[c] += v*v;
+					} else {
+						pN[c]--; sw[c] -= pw[r];
+					}
+				}
+			} else {
+				FOR_LOOP_Mi  {
+					int c = M.nzi_c[i] - 1, r = M.nzi_r[i] - 1;
+					sw[c] += pw[r];
+					v = p[i]*pw[r]; pv[c] += v; p2[c] += v*v;
+				}
+			}
+		} else {
+			int *p = INTEGER(M.nzdata);  // INTSXP or LGLSXP
+			double v;
+			if (na_rm)
+			{
+				FOR_LOOP_Mi  {
+					int c = M.nzi_c[i] - 1, r = M.nzi_r[i] - 1;
+					if (p[i] != NA_INTEGER)
+					{
+						v = p[i]*pw[r]; pv[c] += v; p2[c] += v*v;
+					} else {
+						pN[c]--; sw[c] -= pw[r];
+					}
+				}
+			} else {
+				FOR_LOOP_Mi  {
+					int c = M.nzi_c[i] - 1, r = M.nzi_r[i] - 1;
+					if (p[i] != NA_INTEGER)
+					{
+						sw[c] += pw[r];
+						v = p[i]*pw[r]; pv[c] += v; p2[c] += v*v;
+					} else pv[c] = p2[c] = NA_REAL;
+				}
+			}
+		}
+		// final
+		for (int i=0; i < ncol; i++)
+		{
+			int n = na_rm ? pN[i] : nrow;
+			double u = sq(n / sw[i]);
+			pv[i] = (n>1) ? u*(p2[i] - pv[i]*pv[i]/n) / (n-1) : NA_REAL;
+		}
+		// release
+		UNPROTECT(1 + (int)na_rm);
 	}
 	// output
 	UNPROTECT(1);

@@ -57,6 +57,13 @@ setMethod("[[", SClass,
 setMethod("aperm", SClass,
     function(a, perm, ...) .sc_val(callNextMethod()) )
 
+# names<-
+setMethod("names<-", SClass, function(x, value) .sc_val(callNextMethod()) )
+
+# dimnames<-
+setMethod("dimnames<-", SClass, function(x, value) .sc_val(callNextMethod()) )
+
+
 # Ops
 setMethod("Ops", c(SClass, "vector"),
     function(e1, e2) .sc_val(callGeneric(as(e1, DClass), e2)) )
