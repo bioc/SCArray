@@ -20,10 +20,12 @@ and manipulation using the R programming language.
 
 \examples{
 # a GDS file for SingleCellExperiment
-fn <- system.file("extdata", "LaMannoBrainData.gds", package="SCArray")
+fn <- system.file("extdata", "example.gds", package="SCArray")
 
 sce <- scExperiment(fn)
 sce
+
+rm(sce)
 }
 
 \keyword{GDS}

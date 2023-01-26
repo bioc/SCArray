@@ -614,40 +614,71 @@ scObj <- function(obj, verbose=FALSE)
 
 scSetMax <- function(x, vmax)
 {
+    # check
     stopifnot(is(x, "SC_GDSArray"))
     stopifnot(is.numeric(vmax), length(vmax)==1L)
     if (is.na(vmax)) return(x)
-    x <- DelayedArray:::stash_DelayedUnaryIsoOpStack(x,
-        function(a) base::pmin(a, vmax))
-    .sc_val(x)
+    # set a function
+    f <- function(a) base::pmin(a, vmax)
+    env <- new.env(parent=globalenv())  # need an environment only having vmax
+    assign("vmax", vmax, envir=env)
+    environment(f) <- env
+    # output
+    .sc_val(DelayedArray:::stash_DelayedUnaryIsoOpStack(x, f))
 }
 
 scSetMin <- function(x, vmin)
 {
+    # check
     stopifnot(is(x, "SC_GDSArray"))
     stopifnot(is.numeric(vmin), length(vmin)==1L)
     if (is.na(vmin)) return(x)
-    x <- DelayedArray:::stash_DelayedUnaryIsoOpStack(x,
-        function(a) base::pmax(a, vmin))
-    .sc_val(x)
+    # set a function
+    f <- function(a) base::pmax(a, vmin)
+    env <- new.env(parent=globalenv())  # need an environment only having vmin
+    assign("vmin", vmin, envir=env)
+    environment(f) <- env
+    # output
+    .sc_val(DelayedArray:::stash_DelayedUnaryIsoOpStack(x, f))
 }
 
 scSetBounds <- function(x, vmin=NaN, vmax=NaN)
 {
+    # check
     stopifnot(is(x, "SC_GDSArray"))
     stopifnot(is.numeric(vmin), length(vmin)==1L)
     stopifnot(is.numeric(vmax), length(vmax)==1L)
     if (!is.na(vmin) && !is.na(vmax))
     {
-        x <- DelayedArray:::stash_DelayedUnaryIsoOpStack(x,
-            function(a) base::pmin(base::pmax(a, vmin), vmax))
-        .sc_val(x)
+        # set a function
+        f <- function(a) base::pmin(base::pmax(a, vmin), vmax)
+        env <- new.env(parent=globalenv())  # need an environment only having vmin, vmax
+        assign("vmin", vmin, envir=env)
+        assign("vmax", vmax, envir=env)
+        environment(f) <- env
+        # output
+        .sc_val(DelayedArray:::stash_DelayedUnaryIsoOpStack(x, f))
     } else if (!is.na(vmin))
     {
-        scSetMin(x, vmin)
+        scSetMin(x, vmin)  # output
     } else if (!is.na(vmax))
     {
-        scSetMax(x, vmax)
+        scSetMax(x, vmax)  # output
     } else
         x
+}
+
+scReplaceNA <- function(x, v=0L)
+{
+    # check
+    stopifnot(is(x, "SC_GDSArray"))
+    stopifnot(is.numeric(v), length(v)==1L)
+    if (is.na(v)) return(x)
+    # set a function
+    f <- function(a) { a[is.na(a)] <- v; a }
+    env <- new.env(parent=globalenv())  # need an environment only having v
+    assign("v", v, envir=env)
+    environment(f) <- env
+    # output
+    .sc_val(DelayedArray:::stash_DelayedUnaryIsoOpStack(x, f))
 }

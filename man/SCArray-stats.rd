@@ -59,6 +59,14 @@
 \alias{colRanges}
 \alias{colRanges,SC_GDSMatrix-method}
 
+\alias{scRowMeanVar}
+\alias{scColMeanVar}
+
+\alias{rowCollapse}
+\alias{rowCollapse,SC_GDSMatrix-method}
+\alias{colCollapse}
+\alias{colCollapse,SC_GDSMatrix-method}
+
 
 \title{SC_GDSMatrix row/column summarization}
 \description{
@@ -99,6 +107,14 @@ packages.
 \S4method{colMaxs}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE)
 \S4method{rowRanges}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE)
 \S4method{colRanges}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE)
+
+# Get means and variances together for each row or column,
+#     return a matrix with two columns for mean and variance
+scRowMeanVar(x, na.rm=FALSE, useNames=FALSE)
+scColMeanVar(x, na.rm=FALSE, useNames=FALSE)
+
+\S4method{rowCollapse}{SC_GDSMatrix}(x, idxs, rows=NULL, ..., useNames=NA)
+\S4method{colCollapse}{SC_GDSMatrix}(x, idxs, cols=NULL, ..., useNames=NA)
 }
 
 \arguments{
@@ -110,6 +126,9 @@ packages.
     \item{w}{\code{NULL} or a numeric vector for weights}
     \item{center}{\code{NULL}, or a vector of pre-calculated row (column) means}
     \item{useNames}{if \code{TRUE}, the name attributes of result are set}
+    \item{idxs}{An index vector specifying the columns (rows) to be extracted;
+        the vector will be reused if the length is less than the number of
+        columns or rows}
     \item{...}{additional arguments passed to specific methods}
 }
 
@@ -118,6 +137,7 @@ packages.
 the GDS file.
 }
 
+\author{Xiuwen Zheng}
 \seealso{
     \itemize{
         \item The \pkg{DelayedMatrixStats} package for more row/column
@@ -127,10 +147,6 @@ the GDS file.
         \item \link{DelayedMatrix} objects.
         \item \link[base]{matrix} objects in base R.
     }
-}
-
-\examples{
-1
 }
 
 \keyword{methods}

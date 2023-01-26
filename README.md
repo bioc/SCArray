@@ -40,35 +40,34 @@ BiocManager::install("SCArray")
 suppressPackageStartupMessages(library(SCArray))
 
 # the GDS file for SingleCellExperiment
-fn <- system.file("extdata", "LaMannoBrainData.gds", package="SCArray")
+fn <- system.file("extdata", "example.gds", package="SCArray")
 sce <- scExperiment(fn)
 
 sce
 ## class: SingleCellExperiment
-## dim: 12000 243
+## dim: 1000 850
 ## metadata(0):
 ## assays(1): counts
-## rownames(12000): Rp1 Sox17 ... Efhd2 Fhad1
+## rownames(1000): MRPL20 GNB1 ... RPS4Y1 CD24
 ## rowData names(0):
-## colnames(243): 1772072122_A04 1772072122_A05 ... 1772099011_H05 1772099012_E04
-## colData names(2): CELL_ID Cell_type
+## colnames(850): 1772122_301_C02 1772122_180_E05 ... 1772122_180_B06 1772122_180_D09
+## colData names(3): Cell_ID Cell_type Timepoint
 ## reducedDimNames(0):
 ## mainExpName: NULL
 ## altExpNames(0):
 
 counts(sce)
-## <12000 x 243> sparse matrix of class SC_GDSMatrix and type "double":
-##         1772072122_A04 1772072122_A05 1772072122_A06 ... 1772099011_H05 1772099012_E04
-##     Rp1              0              0              0   .              0              0
-##   Sox17              0              0              0   .              0              0
-##  Mrpl15              1              2              1   .              2              2
-##  Lypla1              0              0              1   .              0              1
-##   Tcea1              1              0              4   .              6              1
-##     ...              .              .              .   .              .              .
-##   Agmat              0              0              0   .              0              0
-## Dnajc16              0              0              0   .              0              0
-##   Casp9              0              0              0   .              0              0
-##   Efhd2              0              0              0   .              1              1
-##   Fhad1              0              0              0   .              1              0
+## <1000 x 850> sparse matrix of class SC_GDSMatrix and type "double":
+##              1772122_301_C02 1772122_180_E05 1772122_300_H02 ... 1772122_180_B06
+##       MRPL20               3               2               3   .               0
+##         GNB1              11               6              15   .               0
+##        RPL22               3               5               7   .               6
+##        PARK7               1               7               3   .               2
+##         ENO1               8              19              20   .               7
+##          ...               .               .               .   .               .
+##         SSR4               0               6               3   .               5
+##        RPL10              11               4               8   .               1
+## SLC25A6_loc1               4               5               5   .               3
+##       RPS4Y1               0               5               0   .               2
+##         CD24              18               3               7   .               0
 ```
-

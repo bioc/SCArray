@@ -1,13 +1,16 @@
-CHANGES IN VERSION 1.7.4
+CHANGES IN VERSION 1.7.5
 -------------------------
+
+    o new functions `scSetMax()`, `scSetMin()`, `scSetBounds()`,
+      `scReplaceNA()`, `scRowMeanVar()`, `scColMeanVar()`
 
     o update S4 functions `[`, `[[`, `names<-`, `dimnames<-`, aperm, Ops, Math,
       crossprod, tcrossprod for SC_GDSArray
 
-    o update S4 functions rowSums, colSums, rowSums2, colSums2, rowProds,
+    o override S4 functions rowSums, colSums, rowSums2, colSums2, rowProds,
       colProds, rowMeans, colMeans, rowMeans2, colMeans2, rowVars, colVars,
-      rowSds, colSds, rowMins, colMins, rowMaxs, colMaxs, rowRanges, colRanges
-      for SC_GDSMatrix
+      rowSds, colSds, rowMins, colMins, rowMaxs, colMaxs, rowRanges, colRanges,
+      rowCollapse, colCollapse for SC_GDSMatrix
 
 
 CHANGES IN VERSION 1.4.0

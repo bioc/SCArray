@@ -334,8 +334,9 @@ setMethod("colWeightedMeans", SMatrix, x_colWeightedMeans)
 .x_row_vars <- function(x, na.rm, center, ...)
 {
     # check
-    if (!is.null(center))
+    if (length(center))
     {
+        if (length(center)==1L) center <- rep(center, nrow(x))
         stopifnot(nrow(x) == length(center))
         if (is.integer(center)) center <- as.double(center)
     }
@@ -351,8 +352,9 @@ setMethod("colWeightedMeans", SMatrix, x_colWeightedMeans)
 .x_col_vars <- function(x, na.rm, center, ...)
 {
     # check
-    if (!is.null(center))
+    if (length(center))
     {
+        if (length(center)==1L) center <- rep(center, ncol(x))
         stopifnot(ncol(x) == length(center))
         if (is.integer(center)) center <- as.double(center)
     }
@@ -754,11 +756,14 @@ setMethod("colRanges", SMatrix, x_colRanges)
     ii <- unique(sort(idx))  # NA is removed
     idx <- match(idx, ii)
     x <- x[, ii, drop=FALSE]
-
-    blockReduce(function(bk, v, na.rm) {
-        .Call(c_rowRanges, bk, v, na.rm)
-    }, x, init=vector(type(x), nrow(x)),
-        grid=colAutoGrid(x), as.sparse=F)
+    # init
+    .Call(c_rowCollapse_init, idx, dim(x))
+    on.exit(.Call(c_rowCollapse_done))
+    init_val <- rep(NA, nrow(x))
+    storage.mode(init_val) <- type(x)
+    # block read
+    blockReduce(function(bk, v) .Call(c_rowCollapse, bk, v),
+        x, init=init_val, grid=colAutoGrid(x))
 }
 
 .x_col_collapse <- function(x, idx)
@@ -768,7 +773,7 @@ setMethod("colRanges", SMatrix, x_colRanges)
     idx <- match(idx, ii)
     x <- x[ii, , drop=FALSE]
     # init
-    .Call(c_Collapse_init, idx)
+    .Call(c_colCollapse_init, idx)
     # block read
     blockReduce(function(bk, v) .Call(c_colCollapse, bk, v),
         x, init=vector(type(x), ncol(x)), grid=colAutoGrid(x))
@@ -777,6 +782,7 @@ setMethod("colRanges", SMatrix, x_colRanges)
 x_rowCollapse <- function(x, idxs, rows=NULL, ..., useNames=NA)
 {
     x_check(x, "Calling SCArray:::x_rowCollapse() with %s ...")
+    stopifnot(is.numeric(idxs), length(idxs) > 0L)
     k <- x_type(x)
     if (k < 3L)
     {
@@ -785,17 +791,18 @@ x_rowCollapse <- function(x, idxs, rows=NULL, ..., useNames=NA)
             v <- .x_row_collapse(x, idxs)
         else
             v <- .x_col_collapse(t(x), idxs)
-        if (isTRUE(useNames)) names(v) <- colnames(x)
+        if (isTRUE(useNames)) names(v) <- rownames(x)
         v
-    } else {   # 3
+    } else {  # 3
         x_msg("Calling DelayedMatrixStats::rowCollapse() ...")
         callNextMethod()
     }
 }
 
-x_colCollapse <- function(x, idxs=idxs, cols=NULL, ..., useNames=NA)
+x_colCollapse <- function(x, idxs, cols=NULL, ..., useNames=NA)
 {
     x_check(x, "Calling SCArray:::x_colCollapse() with %s ...")
+    stopifnot(is.numeric(idxs), length(idxs) > 0L)
     k <- x_type(x)
     if (k < 3L)
     {
@@ -806,7 +813,7 @@ x_colCollapse <- function(x, idxs=idxs, cols=NULL, ..., useNames=NA)
             v <- .x_row_collapse(t(x), idxs)
         if (isTRUE(useNames)) names(v) <- colnames(x)
         v
-    } else {   # 3
+    } else {  # 3
         x_msg("Calling DelayedMatrixStats::colCollapse() ...")
         callNextMethod()
     }

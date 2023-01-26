@@ -32,10 +32,12 @@ scExperiment(gdsfile, sce=TRUE, use.names=TRUE, load.row=TRUE, load.col=TRUE)
 
 \examples{
 # a GDS file for SingleCellExperiment
-fn <- system.file("extdata", "LaMannoBrainData.gds", package="SCArray")
+fn <- system.file("extdata", "example.gds", package="SCArray")
 
 sce <- scExperiment(fn)
 sce
+
+remove(sce)
 }
 
 \keyword{GDS}

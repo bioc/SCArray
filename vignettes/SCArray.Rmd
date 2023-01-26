@@ -61,7 +61,7 @@ suppressPackageStartupMessages(library(SCArray))
 suppressPackageStartupMessages(library(SingleCellExperiment))
 
 # load a SingleCellExperiment object
-fn <- system.file("extdata", "LaMannoBrainSub.rds", package="SCArray")
+fn <- system.file("extdata", "example.rds", package="SCArray")
 sce <- readRDS(fn)
 
 # convert to a GDS file
@@ -95,7 +95,7 @@ SingleCellExperiment object are DelayedMatrix objects to avoid the memory limit.
 
 ```{r}
 # a GDS file in the SCArray package
-(fn <- system.file("extdata", "LaMannoBrainData.gds", package="SCArray"))
+(fn <- system.file("extdata", "example.gds", package="SCArray"))
 # load a SingleCellExperiment object from the file
 sce <- scExperiment(fn)
 sce

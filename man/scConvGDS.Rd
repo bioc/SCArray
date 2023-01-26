@@ -31,12 +31,13 @@ scConvGDS(obj, outfn, save.sp=TRUE, type=c("float32", "float64", "int32"),
 
 \examples{
 # load a SingleCellExperiment object
-fn <- system.file("extdata", "LaMannoBrainSub.rds", package="SCArray")
+fn <- system.file("extdata", "example.rds", package="SCArray")
 sce <- readRDS(fn)
+sce
 
 scConvGDS(sce, "test.gds")
 
-# remove the temporary output file
+# remove the temporary file
 unlink("test.gds")
 }
 

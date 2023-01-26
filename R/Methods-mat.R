@@ -13,9 +13,9 @@
 #######################################################################
 
 # t(x) %*% y, y = x
-x_crossprod_1 <- function(x, y)
+x_crossprod_x <- function(x, y)
 {
-    x_check(x, "Calling SCArray:::x_crossprod_1() with %s ...")
+    x_check(x, "Calling SCArray:::x_crossprod_x() with %s ...")
     k <- x_type(x)
     if (k == 2L)
     {
@@ -30,9 +30,9 @@ x_crossprod_1 <- function(x, y)
 }
 
 # x %*% t(y), y = x
-x_tcrossprod_1 <- function(x, y)
+x_tcrossprod_x <- function(x, y)
 {
-    x_check(x, "Calling SCArray:::x_tcrossprod_1() with %s ...")
+    x_check(x, "Calling SCArray:::x_tcrossprod_x() with %s ...")
     k <- x_type(x)
     if (k == 1L)
     {
@@ -47,6 +47,6 @@ x_tcrossprod_1 <- function(x, y)
 }
 
 
-setMethod("crossprod", c("SC_GDSMatrix", "missing"), x_crossprod_1)
-setMethod("tcrossprod", c("SC_GDSMatrix", "missing"), x_tcrossprod_1)
+setMethod("crossprod", c("SC_GDSMatrix", "missing"), x_crossprod_x)
+setMethod("tcrossprod", c("SC_GDSMatrix", "missing"), x_tcrossprod_x)
 

@@ -81,6 +81,7 @@ object.
     }
 }
 
+\author{Xiuwen Zheng}
 \seealso{
     \link{Ops}, \link{Math}, \link{SCArray-stats}
 }

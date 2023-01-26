@@ -38,14 +38,74 @@ setAs("ANY", SMatrix,
 
 #######################################################################
 
+.reset_OPS_env <- function(x, varnm)
+{
+    # find OPS
+    if (is(x, "DelayedUnaryIsoOpStack"))
+    {
+        for (f in x@OPS)
+        {
+            e <- environment(f)
+            if (!is.null(e))
+            {
+                for (nm in varnm)
+                    if (exists(nm, envir=e)) remove(list=nm, envir=e)
+            }
+        }
+        return(TRUE)
+    }
+    if (is(x, "DelayedUnaryOp"))
+        return(.reset_OPS_env(x@seed, varnm))
+    # find OP
+    if (is(x, "DelayedNaryOp"))
+    {
+        if (is(x, "DelayedNaryIsoOp"))
+        {
+            e <- environment(x@OP)
+            if (!is.null(e))
+            {
+                for (nm in varnm)
+                    if (exists(nm, envir=e)) remove(list=nm, envir=e)
+            }
+            return(TRUE)
+        }
+        x <- x@seeds
+    }
+    # find next
+    if (is.list(x) && !is.array(x))
+    {
+        for (y in x)
+        {
+            if (.reset_OPS_env(y, varnm)) return(TRUE)
+        }
+    }
+    FALSE
+}
+
+
 .sc_val <- function(v)
 {
     if (is(v, DMatrix) && !is(v, SMatrix))
-        v <- as(v, SMatrix)
+        as(v, SMatrix)
     else if (is(v, DClass) && !is(v, SClass))
-        v <- as(v, SClass)
-    v
+        as(v, SClass)
+    else
+        v
 }
+
+.sc_val_e1 <- function(v)
+{
+    .reset_OPS_env(v, "e1")
+    .sc_val(v)
+}
+
+.sc_val_e2 <- function(v)
+{
+    .reset_OPS_env(v, "e2")
+    .sc_val(v)
+}
+
+
 
 # subsetting
 setMethod("[", SClass,
@@ -66,21 +126,20 @@ setMethod("dimnames<-", SClass, function(x, value) .sc_val(callNextMethod()) )
 
 # Ops
 setMethod("Ops", c(SClass, "vector"),
-    function(e1, e2) .sc_val(callGeneric(as(e1, DClass), e2)) )
+    function(e1, e2) .sc_val_e1(callGeneric(as(e1, DClass), e2)) )
 setMethod("Ops", c("vector", SClass),
-    function(e1, e2) .sc_val(callGeneric(e1, as(e2, DClass))) )
+    function(e1, e2) .sc_val_e2(callGeneric(e1, as(e2, DClass))) )
 setMethod("Ops", c(SClass, SClass),
     function(e1, e2) .sc_val(callGeneric(as(e1, DClass), as(e2, DClass))) )
 setMethod("+", c(SClass, "missing"),    # unary operators "+"
-    function(e1, e2) .sc_val(callGeneric(as(e1, DClass))) )
+    function(e1, e2) .sc_val_e1(callGeneric(as(e1, DClass))) )
 setMethod("-", c(SClass, "missing"),    # unary operators "-"
-    function(e1, e2) .sc_val(callGeneric(as(e1, DClass))) )
+    function(e1, e2) .sc_val_e1(callGeneric(as(e1, DClass))) )
 
 # Math
 setMethods("Math", SClass,
     function(x) .sc_val(callGeneric(as(x, DClass))) )
 
-# setMethod("dimnames<-", SClass, function(x) .sc_val(callNextMethod()))
 
 
 #######################################################################

@@ -1,20 +1,15 @@
-\name{scSetBounds}
-\alias{scSetBounds}
-\alias{scSetMax}
-\alias{scSetMin}
-\title{Set the bounds}
+\name{scReplaceNA}
+\alias{scReplaceNA}
+\title{Replacement}
 \description{
-    Set the maximum and/or minimum on a GDS-specific DelayedArray.
+    Replace NA/NaN in a GDS-specific DelayedArray by a specified value.
 }
 \usage{
-scSetMax(x, vmax)
-scSetMin(x, vmin)
-scSetBounds(x, vmin=NaN, vmax=NaN)
+scReplaceNA(x, v=0L)
 }
 \arguments{
     \item{x}{a \code{SC_GDSArray} object}
-    \item{vmax}{maximum, length-one}
-    \item{vmin}{minimum, length-one}
+    \item{v}{a length-one double or integer value}
 }
 \value{
     Return an object with the class \code{SC_GDSMatrix} or \code{SC_GDSArray}.
@@ -22,21 +17,20 @@ scSetBounds(x, vmin=NaN, vmax=NaN)
 
 \author{Xiuwen Zheng}
 \seealso{
-    \code{\link{scReplaceNA}}
+    \code{\link{scSetMin}}, \code{\link{scSetMax}}, \code{\link{scSetBounds}}
 }
 
 \examples{
 suppressPackageStartupMessages(library(DelayedArray))
 
 m <- matrix(1:12, nrow=3)
+m[2, c(1,3)] <- NA
 (mat <- DelayedArray(m))
 
 new_m <-  scObj(mat)  # wrap a in-memory DelayedMatrix
 class(new_m)  # SC_GDSMatrix
 
-scSetMax(new_m, 5)
-scSetMin(new_m, 5)
-scSetBounds(new_m, 4, 9)
+scReplaceNA(new_m,  999)
 }
 
 \keyword{GDS}

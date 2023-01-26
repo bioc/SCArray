@@ -12,6 +12,69 @@
 
 #######################################################################
 
+.x_row_mean_var <- function(x, na.rm)
+{
+    # block read
+    v <- blockReduce(function(bk, v, na.rm) {
+        .Call(c_rowVars, bk, v, na.rm, NULL)
+    }, x, double(nrow(x)*3L), grid=colAutoGrid(x), as.sparse=NA, na.rm=na.rm)
+    # finally
+    .Call(c_rowMeanVar_final, v)
+}
+
+.x_col_mean_var <- function(x, na.rm, ...)
+{
+    # block read
+    lst <- blockApply(x, function(bk, na.rm) {
+        .Call(c_colMeanVar, bk, na.rm)
+    }, grid=colAutoGrid(x), as.sparse=NA, na.rm=na.rm, ...)
+    # finally
+    do.call(rbind, lst)
+}
+
+scRowMeanVar <- function(x, na.rm=FALSE, useNames=FALSE)
+{
+    stopifnot(is(x, "SC_GDSMatrix"))
+    stopifnot(is.logical(na.rm), length(na.rm)==1L)
+    x_check(x, "Calling SCArray::scRowMeanVar() with %s ...")
+    k <- x_type(x)
+    if (k == 1L)
+    {
+        v <- .x_row_mean_var(x, na.rm)
+    } else if (k == 2L)
+    {
+        v <- .x_col_mean_var(t(x), na.rm)
+    } else {
+        v <- cbind(rowMeans(x, na.rm=na.rm), rowVars(x, na.rm=na.rm))
+    }
+    colnames(v) <- c("mean", "var")
+    if (isTRUE(useNames)) rownames(v) <- rownames(x)
+    v
+}
+
+scColMeanVar <- function(x, na.rm=FALSE, useNames=FALSE)
+{
+    stopifnot(is(x, "SC_GDSMatrix"))
+    stopifnot(is.logical(na.rm), length(na.rm)==1L)
+    x_check(x, "Calling SCArray::scColMeanVar() with %s ...")
+    k <- x_type(x)
+    if (k == 1L)
+    {
+        v <- .x_col_mean_var(x, na.rm)
+    } else if (k == 2L)
+    {
+        v <- .x_row_mean_var(t(x), na.rm)
+    } else {
+        v <- cbind(colMeans(x, na.rm=na.rm), colVars(x, na.rm=na.rm))
+    }
+    colnames(v) <- c("mean", "var")
+    if (isTRUE(useNames)) rownames(v) <- colnames(x)
+    v
+}
+
+
+#######################################################################
+
 x_runsvd <- function(x, rank, scale=FALSE, approx=TRUE)
 {
     # to use crossprod

@@ -18,99 +18,82 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "sc_main.h"
+#include <vector>
 
 
 extern "C"
 {
 // ====  rowCollapse & colCollapse  ====
 
-static int idx_n = 0, idx_i = 0, idx_st = 0;
-static int *idx_p = NULL;
+static std::vector< std::vector<int> > row_map;
+static int idx_col = 0;
 
-SEXP c_Collapse_init(SEXP idx)
+SEXP c_rowCollapse_init(SEXP idx, SEXP dim)
 {
-	idx_n = Rf_length(idx);
-	idx_i = 0; idx_st = 0;
-	idx_p = (idx_n > 0) ? INTEGER(idx) : &NA_INTEGER;
+	const int nrow = INTEGER(dim)[0];
+	const int ncol = INTEGER(dim)[1];
+	const int *pIdx = INTEGER(idx), nIdx = Rf_length(idx);
+	row_map.clear();
+	row_map.resize(ncol);
+	int ii = 0;
+	for (int i=0; i < nrow; i++)
+	{
+		int j = pIdx[ii++];
+		if (ii >= nIdx) ii = 0;
+		if (0 < j && j <= ncol)
+			row_map[j-1].push_back(i);
+	}
+	idx_col = 0;
 	return R_NilValue;
 }
 
-
-/*
-SEXP c_rowCollapse(SEXP mat, SEXP val, SEXP idx)
+SEXP c_rowCollapse_done()
 {
-	const bool na_rm = (Rf_asLogical(narm) == TRUE);
+	row_map.clear();
+	return R_NilValue;
+}
+
+SEXP c_rowCollapse(SEXP mat, SEXP val)
+{
 	int nrow, ncol;
 	get_mat_size(mat, nrow, ncol);
 	// do
-	double *pv = REAL(val);
 	if (TYPEOF(mat) == REALSXP)
 	{
-		const double *p = REAL(mat);
-		FOR_LOOP_i_j {
-			double v = p[j], &d = pv[j];
-			if (!ISNAN(v))
-			{
-				if (!ISNAN(d) && (v < d)) d = v;
-			} else {
-				if (!na_rm) d = NA_REAL;
-			}			
+		double *p = REAL(mat), *pv = REAL(val);
+		FOR_LOOP_i {
+			const std::vector<int> &r = row_map[idx_col + i];
+			std::vector<int>::const_iterator it = r.begin();
+			for (; it != r.end(); it++)
+				pv[*it] = p[*it];
 		}
 	} else if (TYPEOF(mat) == INTSXP)
 	{
-		const int *p = INTEGER(mat);
-		FOR_LOOP_i_j {
-			int v = p[j]; double &d = pv[j];
-			if (v != NA_INTEGER)
-			{
-				if (!ISNAN(d) && (v < d)) d = v;
-			} else {
-				if (!na_rm) d = NA_REAL;
-			}			
+		int *p = INTEGER(mat), *pv = INTEGER(val);
+		FOR_LOOP_i {
+			const std::vector<int> &r = row_map[idx_col + i];
+			std::vector<int>::const_iterator it = r.begin();
+			for (; it != r.end(); it++)
+				pv[*it] = p[*it];
 		}
-	} else if (is_sparse_seed(mat))
-	{
-		SparseMatrix M(mat);
-		int *pn = INTEGER(PROTECT(NEW_INTEGER(nrow)));
-		memset(pn, 0, sizeof(int)*nrow);
-		if (TYPEOF(M.nzdata) == REALSXP)
-		{
-			const double *p = REAL(M.nzdata);
-			FOR_LOOP_Mi {
-				int r = M.nzi_r[i] - 1;
-				pn[r] ++;
-				double v = p[i], &d = pv[r];
-				if (!ISNAN(v))
-				{
-					if (!ISNAN(d) && (v < d)) d = v;
-				} else {
-					if (!na_rm) d = NA_REAL;
-				}
-			}
-		} else {
-			const int *p = INTEGER(M.nzdata);  // INTSXP
-			FOR_LOOP_Mi {
-				int r = M.nzi_r[i] - 1;
-				pn[r] ++;
-				double &d = pv[r];
-				if (p[i] != NA_INTEGER)
-				{
-					double v = p[i];
-					if (!ISNAN(d) && (v < d)) d = v;
-				} else {
-					if (!na_rm) d = NA_REAL;
-				}
-			}
-		}
-		// check zero
-		for (int i=0; i < nrow; i++)
-			if (pn[i]<ncol && !ISNAN(pv[i]) && 0<pv[i]) pv[i] = 0;
-		UNPROTECT(1);
 	}
+	idx_col += ncol;
 	// output
 	return val;
 }
-*/
+
+// ====
+
+static int idx_n = 0, idx_i = 0;
+static int *idx_p = NULL;
+
+SEXP c_colCollapse_init(SEXP idx)
+{
+	idx_n = Rf_length(idx);
+	idx_i = idx_col = 0;
+	idx_p = (idx_n > 0) ? INTEGER(idx) : &NA_INTEGER;
+	return R_NilValue;
+}
 
 SEXP c_colCollapse(SEXP mat, SEXP val)
 {
@@ -123,7 +106,7 @@ SEXP c_colCollapse(SEXP mat, SEXP val)
 		FOR_LOOP_i {
 			int j = idx_p[idx_i++];
 			if (idx_i >= idx_n) idx_i = 0;
-			pv[idx_st+i] = (j != NA_INTEGER) ? p[j-1] : NA_REAL;
+			pv[idx_col+i] = (j != NA_INTEGER) ? p[j-1] : NA_REAL;
 		}
 	} else if (TYPEOF(mat) == INTSXP)
 	{
@@ -131,10 +114,10 @@ SEXP c_colCollapse(SEXP mat, SEXP val)
 		FOR_LOOP_i {
 			int j = idx_p[idx_i++];
 			if (idx_i >= idx_n) idx_i = 0;
-			pv[idx_st+i] = (j != NA_INTEGER) ? p[j-1] : j;
+			pv[idx_col+i] = (j != NA_INTEGER) ? p[j-1] : j;
 		}
 	}
-	idx_st += ncol;
+	idx_col += ncol;
 	// output
 	return val;
 }
