@@ -153,7 +153,8 @@ scRunPCA <- function(x, ncomponents=50, ntop=500, subset_row=NULL, scale=FALSE,
     }
 
     # do PCA
-    if (verbose) cat("Start PCA on the matrix ...\n")
+    if (verbose)
+        cat("Start PCA on the covariance matrix ...\n")
     if (is.null(BSPARAM))
     {
         pca <- x_runsvd(mat, ncomponents, scale=scale)

@@ -30,12 +30,15 @@ scRunPCA(x, ncomponents=50, ntop=500, subset_row=NULL, scale=FALSE,
     \item{verbose}{if TRUE, show information}
 }
 \value{
-    Return an object with the class \code{SC_GDSMatrix} or \code{SC_GDSArray}.
+    Returns a SingleCellExperiment object containing the PC coordinate matrix
+in \code{reducedDims(..., name)}. The attributes of the PC coordinate matrix
+have "percentVar", "varExplained" and "rotation" (see \code{scater::runPCA}
+for more details).
 }
 
 \author{Xiuwen Zheng}
 \seealso{
-    \code{\link{scExperiment}}
+    \code{\link[scater]{runPCA}}
 }
 
 \examples{

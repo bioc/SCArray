@@ -10,12 +10,8 @@
 #
 
 
-# Package-wide variable
-.packageEnv <- new.env()
-
-q_Matrix <- quote(suppressPackageStartupMessages(
-    require("Matrix", quietly=TRUE)))
-q_rhdf5  <- quote(suppressPackageStartupMessages(
+# Internal
+q_rhdf5 <- quote(suppressPackageStartupMessages(
     require("rhdf5", quietly=TRUE)))
 q_HDF5Array <- quote(suppressPackageStartupMessages(
     require("HDF5Array", quietly=TRUE)))
@@ -198,8 +194,9 @@ scExperiment <- function(gdsfile, sce=TRUE, use.names=TRUE, load.row=TRUE,
 
 
 #######################################################################
-# Convert an R object (count matrix) to a single-cell GDS file
-# the R object can be matrix, DelayedMatrix
+# Convert an R object to a single-cell GDS file
+# the input R object can be matrix, DelayedMatrix, SummarizedExperiment or
+#     SingleCellExperiment
 #
 scConvGDS <- function(obj, outfn, save.sp=TRUE,
     type=c("float32", "float64", "int32"), compress="LZMA_RA", clean=TRUE,
@@ -217,33 +214,38 @@ scConvGDS <- function(obj, outfn, save.sp=TRUE,
     stopifnot(is.logical(verbose), length(verbose)==1L)
 
     # row and column names
-    rownm <- colnm <- rowdat <- coldat <- metadat <- NULL
-    nr <- nc <- 0L
+    rowdat <- coldat <- metadat <- NULL
+    nr <- nrow(obj); rownm <- rownames(obj)
+    nc <- ncol(obj); colnm <- colnames(obj)
     lst <- list()
     if (is.matrix(obj) || inherits(obj, "Matrix") || is(obj, "DelayedMatrix"))
     {
-        rownm <- rownames(obj); colnm <- colnames(obj)
-        nr <- nrow(obj); nc <- ncol(obj)
         assaylst <- list(counts=obj)
-    } else if (is(obj, "SingleCellExperiment") |
-        is(obj, "SummarizedExperiment"))
+    } else if (is(obj, "SingleCellExperiment") | is(obj, "SummarizedExperiment"))
     {
-        rownm <- rownames(obj)
-        if (is.null(rownm)) stop("No rownames!")
-        colnm <- colnames(obj)
-        if (is.null(colnm)) stop("No colnames!")
-        nr <- length(rownm); nc <- length(colnm)
         assaylst <- assays(obj)
         rowdat <- rowData(obj)
         coldat <- colData(obj)
         metadat <- metadata(obj)
+    } else {
+        stop("Not support the input: ", class(obj)[1L])
     }
 
-    # need rownames and colnames
-    if (is.null(rownm)) rownm <- seq_len(nr)
+    # check row and column names
     if (anyDuplicated(rownm)) stop("rownames should be unique.")
-    if (is.null(colnm)) colnm <- seq_len(nc)
     if (anyDuplicated(colnm)) stop("colnames should be unique.")
+
+    # need rownames and colnames
+    if (is.null(rownm))
+    {
+        rownm <- paste0("g", seq_len(nr))
+        warning('rownames=NULL, use c("g1", "g2", ...) instead.', immediate.=TRUE)
+    }
+    if (is.null(colnm))
+    {
+        colnm <- paste0("c", seq_len(nc))
+        warning('colnames=NULL, use c("c1", "c2", ...) instead.', immediate.=TRUE)
+    }
 
     # create a gds file
     if (verbose) .cat("Output: ", outfn)
@@ -263,7 +265,7 @@ scConvGDS <- function(obj, outfn, save.sp=TRUE,
     for (i in seq_along(assaylst))
     {
         nm <- names(assaylst)[i]
-        if (verbose) cat("   ", nm)
+        if (verbose) cat("    ", nm, "  !", sep="")
         st <- type
         if (save.sp)
         {
@@ -273,10 +275,21 @@ scConvGDS <- function(obj, outfn, save.sp=TRUE,
         nd <- add.gdsn(outf, nm, valdim=c(nr, 0L), compress=compress,
             storage=st)
         mt <- assaylst[[i]]
-        blockApply(mt, function(x) { append.gdsn(nd, x); NULL },
-            grid=colAutoGrid(mt), BPPARAM=NULL)
+        if (verbose)
+            pb <- txtProgressBar(min=0L, max=ncol(mt), width=50L)
+        blockApply(mt, function(x) {
+            append.gdsn(nd, x)
+            if (verbose)
+                setTxtProgressBar(pb, start(currentViewport())[2L])
+            NULL
+        }, grid=colAutoGrid(mt), BPPARAM=NULL)
         readmode.gdsn(nd)
-        if (verbose) { cat("  |"); print(nd) }
+        if (verbose)
+        {
+            setTxtProgressBar(pb, ncol(mt))
+            close(pb)
+            cat("    |"); print(nd)
+        }
     }
 
     # add rowData to feature.data
@@ -301,8 +314,10 @@ scConvGDS <- function(obj, outfn, save.sp=TRUE,
         {
             nm <- names(coldat)[i]
             nm <- gsub("/", "_", nm, fixed=TRUE)
-            .cat("    ", nm)
-            add.gdsn(nfd, nm, coldat[,i], compress=compress, closezip=TRUE)
+            v <- coldat[,i]
+            if (verbose)
+                .cat("    ", nm, "\t[", storage.mode(v), "]")
+            add.gdsn(nfd, nm, v, compress=compress, closezip=TRUE)
         }
     }
 
@@ -314,9 +329,10 @@ scConvGDS <- function(obj, outfn, save.sp=TRUE,
         for (i in seq_along(metadat))
         {
             nm <- names(metadat)[i]
-            .cat("    ", nm)
             v <- metadat[[i]]
             if (is(v, "DataFrame")) v <- as.data.frame(v)
+            if (verbose)
+                .cat("    ", nm, "\t[", storage.mode(v), "]")
             add.gdsn(nfd, nm, v, compress=compress, closezip=TRUE)
         }
     }
@@ -351,10 +367,6 @@ scMEX2GDS <- function(feature_fn, barcode_fn, mtx_fn, outfn,
     stopifnot(is.logical(clean), length(clean)==1L)
     stopifnot(is.logical(verbose), length(verbose)==1L)
 
-    # check package
-    if (!eval(q_Matrix))
-        stop("The package 'Matrix' should be installed.")
-
     # load features
     if (anyDuplicated(feature_colnm))
         stop("'feature_colnm' should be unique.")
@@ -382,10 +394,10 @@ scMEX2GDS <- function(feature_fn, barcode_fn, mtx_fn, outfn,
 
     # load count matrix
     if (verbose) .cat("Load ", sQuote(mtx_fn))
-    mt <- Matrix::readMM(mtx_fn)
+    mt <- readMM(mtx_fn)
     if (verbose)
     {
-        nz <- Matrix::nnzero(mt)
+        nz <- nnzero(mt)
         .cat("    ", nrow(mt), "x", ncol(mt), ", # of nonzeros: ",
             nz, sprintf(" (%.4f%%)", 100*nz/prod(dim(mt))))
     }
@@ -563,8 +575,7 @@ scHDF2GDS <- function(h5_fn, outfn, group=c("matrix", "mm10"),
 
 
 #######################################################################
-#
-#
+# Wrap the DelayedArray object with SC_GDSArray
 #
 scObj <- function(obj, verbose=FALSE)
 {

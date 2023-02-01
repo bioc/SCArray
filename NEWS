@@ -1,5 +1,7 @@
-CHANGES IN VERSION 1.7.5
+CHANGES IN VERSION 1.7.6
 -------------------------
+
+    o update the vignettes
 
     o new functions `scSetMax()`, `scSetMin()`, `scSetBounds()`,
       `scReplaceNA()`, `scRowMeanVar()`, `scColMeanVar()`

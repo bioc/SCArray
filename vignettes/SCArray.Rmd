@@ -1,7 +1,7 @@
 ---
 title: "Large-scale single-cell RNA-seq data manipulation with GDS files"
 author: "Dr. Xiuwen Zheng (Genomics Research Center, AbbVie)"
-date: "Dec 2020"
+date: "Jan 2023"
 output:
     html_document:
         theme: default
@@ -13,6 +13,10 @@ vignette: >
     %\VignetteEngine{knitr::rmarkdown}
     %\VignetteEncoding{UTF-8}
 ---
+
+```{r echo=FALSE}
+options(width=110)
+```
 
 
 ## Introduction
@@ -68,7 +72,8 @@ sce <- readRDS(fn)
 scConvGDS(sce, "test.gds")
 
 # list data structure in the GDS file
-(f <- scOpen("test.gds")); scClose(f)
+(f <- scOpen("test.gds"))
+scClose(f)
 ```
 
 ### Conversion from a matrix
@@ -80,7 +85,7 @@ library(Matrix)
 
 cnt <- matrix(0, nrow=4, ncol=8)
 set.seed(100); cnt[sample.int(length(cnt), 8)] <- rpois(8, 4)
-(cnt <- as(cnt, "dgCMatrix"))
+(cnt <- as(cnt, "sparseMatrix"))
 
 # convert to a GDS file
 scConvGDS(cnt, "test.gds")
@@ -91,7 +96,7 @@ scConvGDS(cnt, "test.gds")
 
 When a single-cell GDS file is available, users can use `scExperiment()` to
 load a SingleCellExperiment object from the GDS file. The assay data in the
-SingleCellExperiment object are DelayedMatrix objects to avoid the memory limit.
+SingleCellExperiment object are DelayedMatrix objects.
 
 ```{r}
 # a GDS file in the SCArray package
@@ -116,36 +121,64 @@ SCArray provides a `SingleCellExperiment` object for downstream data analyses.
 At first, we create a log count matrix `logcnt` from the count matrix.
 Note that `logcnt` is also a DelayedMatrix without actually generating the
 whole matrix.
-
 ```{r}
 cnt <- assays(sce)$counts
 logcnt <- log2(cnt + 1)
-assays(sce)$logcounts <- logcnt
 logcnt
 ```
-
-### Mean for each column or row
-
-The
-[DelayedMatrixStats](http://www.bioconductor.org/packages/DelayedMatrixStats)
-package provides functions operating on rows and columns of DelayedMatrix
-objects. For example, we can calculate the mean for each column or row of
-the log count matrix.
+**Formally**, we call `logNormCounts()` in the scuttle package to normalize the raw counts.
 
 ```{r}
-suppressPackageStartupMessages(library(DelayedMatrixStats))
+suppressPackageStartupMessages(library(scuttle))
 
-col_mean <- DelayedMatrixStats::colMeans2(logcnt)
-str(col_mean)
-row_mean <- DelayedMatrixStats::rowMeans2(logcnt)
-str(row_mean)
+sce <- logNormCounts(sce)
+logcounts(sce)
 ```
 
-### UMAP analysis
 
-The [scater](http://www.bioconductor.org/packages/scater) package can perform
-the uniform manifold approximation and projection (UMAP) for the cell data,
-based on the data in a SingleCellExperiment object.
+### 1. Row and Column Summarization
+
+The [DelayedMatrixStats](http://www.bioconductor.org/packages/DelayedMatrixStats) package provides summarization functions operating on rows and columns of DelayedMatrix objects. SCArray has provided the optimized implementations for the row and column summarization. For example, we can calculate the mean for each column or row of the log count matrix.
+
+```{r}
+col_mean <- colMeans(logcnt)
+str(col_mean)
+row_mean <- rowMeans(logcnt)
+str(row_mean)
+
+# calculate the mean and variance at the same time
+mvar <- scRowMeanVar(logcnt)
+head(mvar)
+```
+
+### 2. PCA analysis
+
+The [scater](http://www.bioconductor.org/packages/scater) package can perform the Principal component analysis (PCA) on the normalized cell data.
+
+```{r}
+suppressPackageStartupMessages(library(scater))
+
+# run umap analysis
+sce <- runPCA(sce)
+```
+`scater::runPCA()` will call the function `beachmat::realizeFileBackedMatrix()` internally to realize a scaled and centered DelayedMatrix into its corresponding in-memory format, so it is memory-intensive for large-scale PCA.
+
+**Instead**, the SCArray package provides `scRunPCA()` for reducing the memory usage in large-scale PCA by perform SVD on the relatively small covariance matrix.
+
+```{r}
+sce <- scRunPCA(sce)
+```
+
+`plotReducedDim()` plots cell-level reduced dimension results (PCA) stored
+in the SingleCellExperiment object:
+
+```{r fig.align="center",fig.width=4,fig.height=3}
+plotReducedDim(sce, dimred="PCA")
+```
+
+### 3. UMAP analysis
+
+The [scater](http://www.bioconductor.org/packages/scater) package can perform the uniform manifold approximation and projection (UMAP) for the cell data, based on the data in a SingleCellExperiment object.
 
 ```{r}
 suppressPackageStartupMessages(library(scater))
@@ -157,7 +190,7 @@ sce <- runUMAP(sce)
 `plotReducedDim()` plots cell-level reduced dimension results (UMAP) stored
 in the SingleCellExperiment object:
 
-```{r fig.width=4,fig.height=3}
+```{r fig.align="center",fig.width=4,fig.height=3}
 plotReducedDim(sce, dimred="UMAP")
 ```
 

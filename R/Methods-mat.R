@@ -20,11 +20,12 @@ x_crossprod_x <- function(x, y)
     if (k == 2L)
     {
         # efficient direction of 'x' is Y, result in [ ncol(x), ncol(x) ]
-        blockReduce(function(bk, v) {
+        blockReduce(function(bk, v)
+        {
             if (is(bk, "SparseArraySeed")) bk <- as(bk, "CsparseMatrix")
-            crossprod(bk) + v
-        }, x, matrix(0.0, nrow=ncol(x), ncol=ncol(x)),
-            grid=rowAutoGrid(x), as.sparse=NA)
+            .Call(c_add_update, v, as.matrix(crossprod(bk)))
+        }, x, matrix(0.0, nrow=ncol(x), ncol=ncol(x)), grid=rowAutoGrid(x),
+            as.sparse=NA)
     } else
         crossprod(as(x, DMatrix))
 }
@@ -37,11 +38,12 @@ x_tcrossprod_x <- function(x, y)
     if (k == 1L)
     {
         # efficient direction of 'x' is X, result in [ nrow(x), nrow(x) ]
-        blockReduce(function(bk, v) {
+        blockReduce(function(bk, v)
+        {
             if (is(bk, "SparseArraySeed")) bk <- as(bk, "CsparseMatrix")
-            .Call(c_add_update, v, tcrossprod(bk))
-        }, x, matrix(0.0, nrow=nrow(x), ncol=nrow(x)),
-            grid=colAutoGrid(x), as.sparse=NA)
+            .Call(c_add_update, v, as.matrix(tcrossprod(bk)))
+        }, x, matrix(0.0, nrow=nrow(x), ncol=nrow(x)), grid=colAutoGrid(x),
+            as.sparse=NA)
     } else
         tcrossprod(as(x, DMatrix))
 }

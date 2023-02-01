@@ -111,20 +111,22 @@ SEXP c_init_block()
 
 SEXP c_add_update(SEXP a, SEXP b)
 {
+	// 'a' should be a real vector or dense real matrix
+	static const char *err_len = "a and b should have the same length.";
 	// check
-	if (TYPEOF(a) == REALSXP)
-		Rf_error("the initial value should be numeric.");
-	if (Rf_xlength(a) != Rf_xlength(b))
-		Rf_error("a and b should have the same length.");
+	if (TYPEOF(a) != REALSXP)
+		Rf_error("The initial value should be numeric.");
 	// add
 	double *p = REAL(a);
 	const size_t n = Rf_xlength(a);
 	if (TYPEOF(b) == REALSXP)
 	{
+		if (Rf_xlength(a) != Rf_xlength(b)) Rf_error(err_len);
 		const double *s = REAL(b);
 		for (size_t i=0; i < n; i++) p[i] += s[i];
-	} if (is_int(b))
+	} else if (is_int(b))
 	{
+		if (Rf_xlength(a) != Rf_xlength(b)) Rf_error(err_len);
 		const int *s = INTEGER(b);
 		for (size_t i=0; i < n; i++)
 			if (s[i] != NA_INTEGER) p[i] += s[i]; else p[i] = NA_REAL;

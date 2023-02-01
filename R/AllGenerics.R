@@ -156,19 +156,24 @@ x_msg <- function(msg)
 
 x_check <- function(x, msg)
 {
-    if (x_verbose())
+    if (!is.null(x))
     {
-        if (grepl("%s", msg, fixed=TRUE))
+        if (x_verbose())
         {
-            s <- class(x)[1L]
-            if (x_type(x) == 2L) s <- paste("transposed", s)
-            s <- paste0(s, " [", paste(dim(x), collapse=","), "]")
-            msg <- sprintf(msg, s)
+            if (grepl("%s", msg, fixed=TRUE))
+            {
+                s <- class(x)[1L]
+                if (x_type(x) == 2L) s <- paste("transposed", s)
+                s <- paste0(s, " [", paste(dim(x), collapse="x"), "]")
+                msg <- sprintf(msg, s)
+            }
+            message(msg)
         }
-        message(msg)
+        DelayedArray:::.get_ans_type(x, must.be.numeric=TRUE)
+        stopifnot(length(dim(x)) == 2L)
+    } else {
+        if (x_verbose()) message(msg)
     }
-    DelayedArray:::.get_ans_type(x, must.be.numeric=TRUE)
-    stopifnot(length(dim(x)) == 2L)
     invisible()
 }
 

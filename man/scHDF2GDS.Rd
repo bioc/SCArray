@@ -35,9 +35,6 @@ scHDF2GDS(h5_fn, outfn, group=c("matrix", "mm10"), feature_path=character(),
     \code{\link{scConvGDS}}, \code{\link{scMEX2GDS}}
 }
 
-\examples{
-}
-
 \keyword{CellRanger}
 \keyword{GDS}
 \keyword{SingleCell}

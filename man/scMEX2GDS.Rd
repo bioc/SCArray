@@ -30,9 +30,6 @@ scMEX2GDS(feature_fn, barcode_fn, mtx_fn, outfn,
     \code{\link{scConvGDS}}, \code{\link{scHDF2GDS}}
 }
 
-\examples{
-}
-
 \keyword{CellRanger}
 \keyword{GDS}
 \keyword{SingleCell}

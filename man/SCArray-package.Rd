@@ -1,5 +1,6 @@
 \name{SCArray-package}
 \alias{SCArray-package}
+\alias{SCArray}
 \docType{package}
 \title{Large-scale single-cell RNA-seq data manipulation with GDS files}
 \description{
