@@ -98,11 +98,18 @@ scArray <- function(gdsfile, varname)
         f <- openfn.gds(gdsfile, readonly=TRUE, allow.fork=TRUE,
             allow.duplicate=TRUE, use.abspath=FALSE)
         gdsfile <- new("SCArrayFileClass", f)
+    } else if (inherits(gdsfile, "gds.class") &&
+        !inherits(gdsfile, "SCArrayFileClass"))
+    {
+        # should be exactly gds.class
+        if (class(gdsfile)[1L] == "gds.class")
+            gdsfile <- new("SCArrayFileClass", gdsfile)
     }
-    stopifnot(inherits(gdsfile, "SCArrayFileClass"))
+    if (!inherits(gdsfile, "SCArrayFileClass"))
+        stop("'gdsfile' should be a file name, gds.class, or SCArrayFileClass.")
     # new SC_GDSMatrix
     seed <- SCArraySeed(gdsfile, varname)
-    as(DelayedArray(seed), "SC_GDSMatrix")
+    as(DelayedArray(seed), "SC_GDSArray")
 }
 
 
@@ -198,7 +205,7 @@ scExperiment <- function(gdsfile, sce=TRUE, use.names=TRUE, load.row=TRUE,
 # the input R object can be matrix, DelayedMatrix, SummarizedExperiment or
 #     SingleCellExperiment
 #
-scConvGDS <- function(obj, outfn, save.sp=TRUE,
+scConvGDS <- function(obj, outfn, assay.name=NULL, save.sp=TRUE,
     type=c("float32", "float64", "int32"), compress="LZMA_RA", clean=TRUE,
     verbose=TRUE)
 {
@@ -207,6 +214,7 @@ scConvGDS <- function(obj, outfn, save.sp=TRUE,
         is(obj, "DelayedMatrix") | is(obj, "SingleCellExperiment") |
         is(obj, "SummarizedExperiment"))
     stopifnot(is.character(outfn), length(outfn)==1L)
+    stopifnot(is.null(assay.name) || is.character(assay.name))
     stopifnot(is.logical(save.sp), length(save.sp)==1L)
     type <- match.arg(type)
     stopifnot(is.character(compress), length(compress)==1L)
@@ -261,10 +269,22 @@ scConvGDS <- function(obj, outfn, save.sp=TRUE,
     if (verbose) .cat("Dimension: ", nr, " x ", nc)
 
     # assays
-    if (verbose) .cat("Assay List:")
-    for (i in seq_along(assaylst))
+    if (is.null(assay.name)) assay.name <- names(assaylst)
+    s <- setdiff(assay.name, names(assaylst))
+    assay.name <- intersect(assay.name, names(assaylst))
+    assay.name <- setdiff(assay.name, c("feature.id", "sample.id",
+        "feature.data", "sample.data", "meta.data"))
+    if (verbose)
     {
-        nm <- names(assaylst)[i]
+        .cat("Assay List [", paste(assay.name, collapse=","), "]:")
+    }
+    if (length(s))
+    {
+        s <- paste(s, collapse=",")
+        warning("    No [", s, "] available.", call.=FALSE, immediate.=TRUE)
+    }
+    for (nm in assay.name)
+    {
         if (verbose) cat("    ", nm, "  !", sep="")
         st <- type
         if (save.sp)
@@ -274,7 +294,7 @@ scConvGDS <- function(obj, outfn, save.sp=TRUE,
         }
         nd <- add.gdsn(outf, nm, valdim=c(nr, 0L), compress=compress,
             storage=st)
-        mt <- assaylst[[i]]
+        mt <- assaylst[[nm]]
         if (verbose)
             pb <- txtProgressBar(min=0L, max=ncol(mt), width=50L)
         blockApply(mt, function(x) {
@@ -483,7 +503,7 @@ scHDF2GDS <- function(h5_fn, outfn, group=c("matrix", "mm10"),
         stop("The package 'HDF5Array' should be installed.")
 
     # load HDF5 count matrix
-    a <- rhdf5::h5ls(h5_fn, all=T)
+    a <- rhdf5::h5ls(h5_fn, all=TRUE)
     a$group[a$group == "/"] <- ""
     a$path <- substring(paste(a$group, a$name, sep="/"), 2L)
     sep <- ifelse(grepl("/$", group), "", "/")
@@ -567,7 +587,7 @@ scHDF2GDS <- function(h5_fn, outfn, group=c("matrix", "mm10"),
     on.exit()
     closefn.gds(outf)
     if (isTRUE(clean)) cleanup.gds(outfn, verbose=FALSE)
-    cat("Done.\n")
+    .cat("Done.")
 
     # output
     invisible(normalizePath(outfn))
@@ -607,12 +627,12 @@ scObj <- function(obj, verbose=FALSE)
             {
                 assay(obj, i) <- as(v, SMatrix)
                 if (verbose)
-                    cat(nm[i], "==> SC_GDSMatrix\n")
+                    .cat(nm[i], " ==> SC_GDSMatrix")
             } else if (is(v, DClass) && !is(v, SClass))
             {
                 assay(obj, i) <- as(v, SClass)
                 if (verbose)
-                    cat(nm[i], "==> SC_GDSArray\n")
+                    .cat(nm[i], " ==> SC_GDSArray")
             }
         }
         obj

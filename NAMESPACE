@@ -13,7 +13,7 @@ useDynLib(SCArray,
 
 # Export the following names
 exportPattern("^sc*")
-exportClasses(SC_GDSArray, SC_GDSMatrix)
+exportClasses(SCArrayFileClass, SC_GDSArray, SC_GDSMatrix)
 exportMethods(
     rowSums, colSums, rowSums2, colSums2, rowProds, colProds,
     rowMeans, colMeans, rowMeans2, colMeans2,
@@ -37,6 +37,6 @@ importFrom(S4Vectors, DataFrame, metadata, new2)
 importFrom(BiocSingular, bsparam, runPCA)
 importFrom(BiocParallel, SerialParam, bpstart, bpstop, bpisup)
 importFrom(SummarizedExperiment, SummarizedExperiment, colData, rowData,
-    assays, assay, "assay<-")
+    assays, "assays<-", assay, "assay<-")
 importFrom(SingleCellExperiment, SingleCellExperiment, altExp,
     reducedDim, "reducedDim<-")

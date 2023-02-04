@@ -60,7 +60,13 @@
 \alias{colRanges,SC_GDSMatrix-method}
 
 \alias{scRowMeanVar}
+\alias{scRowMeanVar,matrix-method}
+\alias{scRowMeanVar,Matrix-method}
+\alias{scRowMeanVar,SC_GDSMatrix-method}
 \alias{scColMeanVar}
+\alias{scColMeanVar,matrix-method}
+\alias{scColMeanVar,Matrix-method}
+\alias{scColMeanVar,SC_GDSMatrix-method}
 
 \alias{rowCollapse}
 \alias{rowCollapse,SC_GDSMatrix-method}
@@ -110,8 +116,10 @@ packages.
 
 # Get means and variances together for each row or column,
 #     return a matrix with two columns for mean and variance
-scRowMeanVar(x, na.rm=FALSE, useNames=FALSE)
-scColMeanVar(x, na.rm=FALSE, useNames=FALSE)
+scRowMeanVar(x, na.rm=FALSE, useNames=FALSE, ...)
+scColMeanVar(x, na.rm=FALSE, useNames=FALSE, ...)
+\S4method{scRowMeanVar}{SC_GDSMatrix}(x, na.rm=FALSE, useNames=FALSE, ...)
+\S4method{scColMeanVar}{SC_GDSMatrix}(x, na.rm=FALSE, useNames=FALSE, ...)
 
 \S4method{rowCollapse}{SC_GDSMatrix}(x, idxs, rows=NULL, ..., useNames=NA)
 \S4method{colCollapse}{SC_GDSMatrix}(x, idxs, cols=NULL, ..., useNames=NA)

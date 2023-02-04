@@ -143,6 +143,45 @@ setMethods("Math", SClass,
 
 
 #######################################################################
+# Generic functions -- scGetFiles()
+
+setGeneric("scGetFiles", function(object, ...) standardGeneric("scGetFiles"))
+
+setMethod("scGetFiles", "SC_GDSArray", function(object, ...) {
+    s <- seedApply(object, function(x)
+        tryCatch(path(x), error=function(e) NULL)
+    )
+    unique(unlist(s))
+})
+
+setMethod("scGetFiles", "SummarizedExperiment",
+    function(object, ...) unique(unlist(lapply(assays(object), scGetFiles))))
+
+
+#######################################################################
+# Generic functions -- scMemory()
+
+setGeneric("scMemory", function(x, ...) x)
+
+setMethod("scMemory", "DelayedArray", function(x, ...)
+{
+    if (is_sparse(x))
+        as(x, "sparseMatrix")
+    else
+        as.matrix(x)
+})
+
+setMethod("scMemory", "SummarizedExperiment", function(x, ...)
+{
+    for (i in seq_along(assays(x)))
+        assays(x)[[i]] <- scMemory(assays(x)[[i]])
+    x
+})
+
+
+
+#######################################################################
+# Internal functions
 
 x_verbose <- function()
 {

@@ -17,7 +17,7 @@ scRunPCA(x, ncomponents=50, ntop=500, subset_row=NULL, scale=FALSE,
     \item{subset_row}{specifying the subset of features to use}
     \item{scale}{if \code{TRUE}, expression values will be be standardized}
     \item{altexp}{String or integer scalar specifying an alternative experiment
-          containing the input data}
+        containing the input data}
     \item{name}{the name to be used to store the result in \code{reducedDims}}
     \item{exprs_values}{the assay name containing the expression values}
     \item{dimred}{String or integer scalar specifying the existing

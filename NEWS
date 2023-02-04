@@ -1,7 +1,9 @@
-CHANGES IN VERSION 1.7.6
+CHANGES IN VERSION 1.7.7
 -------------------------
 
     o update the vignettes
+
+    o new functions `scGetFiles()`, `scMemory()`
 
     o new functions `scSetMax()`, `scSetMin()`, `scSetBounds()`,
       `scReplaceNA()`, `scRowMeanVar()`, `scColMeanVar()`

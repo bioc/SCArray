@@ -11,6 +11,25 @@
 
 
 #######################################################################
+# Generic functions -- scColMeanVar(), scRowMeanVar()
+
+x_num_row_mean_var <- function(x, na.rm=FALSE, useNames=FALSE, ...)
+{
+    stopifnot(is.logical(na.rm), length(na.rm)==1L)
+    v <- cbind(rowMeans(x, na.rm=na.rm), rowVars(x, na.rm=na.rm))
+    colnames(v) <- c("mean", "var")
+    if (isTRUE(useNames)) rownames(v) <- rownames(x)
+    v
+}
+
+x_num_col_mean_var <- function(x, na.rm=FALSE, useNames=FALSE, ...)
+{
+    stopifnot(is.logical(na.rm), length(na.rm)==1L)
+    v <- cbind(colMeans(x, na.rm=na.rm), colVars(x, na.rm=na.rm))
+    colnames(v) <- c("mean", "var")
+    if (isTRUE(useNames)) rownames(v) <- colnames(x)
+    v
+}
 
 .x_row_mean_var <- function(x, na.rm)
 {
@@ -32,7 +51,7 @@
     do.call(rbind, lst)
 }
 
-scRowMeanVar <- function(x, na.rm=FALSE, useNames=FALSE)
+x_sc_row_mean_var <- function(x, na.rm=FALSE, useNames=FALSE, ...)
 {
     stopifnot(is(x, "SC_GDSMatrix"))
     stopifnot(is.logical(na.rm), length(na.rm)==1L)
@@ -52,7 +71,7 @@ scRowMeanVar <- function(x, na.rm=FALSE, useNames=FALSE)
     v
 }
 
-scColMeanVar <- function(x, na.rm=FALSE, useNames=FALSE)
+x_sc_col_mean_var <- function(x, na.rm=FALSE, useNames=FALSE, ...)
 {
     stopifnot(is(x, "SC_GDSMatrix"))
     stopifnot(is.logical(na.rm), length(na.rm)==1L)
@@ -73,13 +92,29 @@ scColMeanVar <- function(x, na.rm=FALSE, useNames=FALSE)
 }
 
 
+setGeneric("scRowMeanVar", function(x, na.rm=FALSE, useNames=FALSE, ...)
+    standardGeneric("scRowMeanVar"))
+setGeneric("scColMeanVar", function(x, na.rm=FALSE, useNames=FALSE, ...)
+    standardGeneric("scColMeanVar"))
+
+setMethod("scRowMeanVar", "matrix", x_sc_row_mean_var)
+setMethod("scColMeanVar", "matrix", x_sc_col_mean_var)
+
+setMethod("scRowMeanVar", "Matrix", x_sc_row_mean_var)
+setMethod("scColMeanVar", "Matrix", x_sc_col_mean_var)
+
+setMethod("scRowMeanVar", "SC_GDSMatrix", x_sc_row_mean_var)
+setMethod("scColMeanVar", "SC_GDSMatrix", x_sc_col_mean_var)
+
+
+
 #######################################################################
 
 x_runsvd <- function(x, rank, scale=FALSE, approx=TRUE)
 {
     # to use crossprod
     if (x_verbose())
-        cat("Using cross product for PCA\n")
+        .cat("Using cross product for PCA")
     # fold = 1 for using cross product
     if (approx)
     {
@@ -91,11 +126,11 @@ x_runsvd <- function(x, rank, scale=FALSE, approx=TRUE)
     }
     # output
     out <- list(sdev = rv$d/sqrt(nrow(x) - 1))
-	out$rotation <- rv$v
-	colnames(out$rotation) <- sprintf("PC%i", seq_len(ncol(out$rotation)))
+    out$rotation <- rv$v
+    colnames(out$rotation) <- sprintf("PC%i", seq_len(ncol(out$rotation)))
     out$x <- sweep(rv$u, 2, rv$d, "*")
     colnames(out$x) <- sprintf("PC%i", seq_len(ncol(out$x)))
-	out
+    out
 }
 
 
