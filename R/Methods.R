@@ -97,11 +97,11 @@ setGeneric("scRowMeanVar", function(x, na.rm=FALSE, useNames=FALSE, ...)
 setGeneric("scColMeanVar", function(x, na.rm=FALSE, useNames=FALSE, ...)
     standardGeneric("scColMeanVar"))
 
-setMethod("scRowMeanVar", "matrix", x_sc_row_mean_var)
-setMethod("scColMeanVar", "matrix", x_sc_col_mean_var)
+setMethod("scRowMeanVar", "matrix", x_num_row_mean_var)
+setMethod("scColMeanVar", "matrix", x_num_col_mean_var)
 
-setMethod("scRowMeanVar", "Matrix", x_sc_row_mean_var)
-setMethod("scColMeanVar", "Matrix", x_sc_col_mean_var)
+setMethod("scRowMeanVar", "Matrix", x_num_row_mean_var)
+setMethod("scColMeanVar", "Matrix", x_num_col_mean_var)
 
 setMethod("scRowMeanVar", "SC_GDSMatrix", x_sc_row_mean_var)
 setMethod("scColMeanVar", "SC_GDSMatrix", x_sc_col_mean_var)

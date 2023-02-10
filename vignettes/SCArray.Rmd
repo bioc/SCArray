@@ -18,6 +18,9 @@ vignette: >
 options(width=110)
 ```
 
+~
+
+~
 
 ## Introduction
 
@@ -36,6 +39,9 @@ converting it to multiple vectors.
 
 ![**Figure 1**: Workflow of SCArray](scarray_fig.svg)
 
+~
+
+~
 
 ## Installation
 
@@ -51,6 +57,9 @@ if (!requireNamespace("BiocManager", quietly=TRUE))
 BiocManager::install("SCArray")
 ```
 
+~
+
+~
 
 ## Format conversion
 
@@ -91,8 +100,11 @@ set.seed(100); cnt[sample.int(length(cnt), 8)] <- rpois(8, 4)
 scConvGDS(cnt, "test.gds")
 ```
 
+~
 
-## Single cell datasets
+~
+
+## Examples
 
 When a single-cell GDS file is available, users can use `scExperiment()` to
 load a SingleCellExperiment object from the GDS file. The assay data in the
@@ -114,6 +126,9 @@ colData(sce)
 rowData(sce)
 ```
 
+~
+
+~
 
 ## Data Manipulation and Analysis
 
@@ -194,8 +209,11 @@ in the SingleCellExperiment object:
 plotReducedDim(sce, dimred="UMAP")
 ```
 
+~
 
-## Session Info
+~
+
+## Session Information
 
 ```{r}
 # print version information about R, the OS and attached or loaded packages

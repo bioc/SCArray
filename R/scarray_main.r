@@ -28,7 +28,6 @@ q_HDF5Array <- quote(suppressPackageStartupMessages(
 .pretty <- function(x) prettyNum(x, big.mark=",", scientific=FALSE)
 
 
-
 # return total # of features, and total # of samples
 .gettotnum <- function(gdsfile)
 {
@@ -39,6 +38,40 @@ q_HDF5Array <- quote(suppressPackageStartupMessages(
     if (length(nsamp) != 1L)
         stop("Invalid dimension of 'sample.id'.")
     c(nfeat, nsamp)
+}
+
+
+# add data.frame or DataFrame to a GDS node
+.add_dframe <- function(nd, dat, compress, verbose, prefix="")
+{
+    for (i in seq_len(NCOL(dat)))
+    {
+        nm <- paste0(prefix, names(dat)[i])
+        nm <- gsub("/", "_", nm, fixed=TRUE)
+        obj <- dat[[i]]
+        if (is.data.frame(obj) || is(obj, "DataFrame"))
+        {
+            .add_dframe(nd, obj, compress, verbose, paste0(nm, "."))
+        } else if (is.matrix(obj) || is(obj, "Matrix"))
+        {
+            ss <- colnames(obj)
+            if (is.null(ss)) ss <- paste0("c", seq_len(ncol(obj)))
+            ss <- make.unique(ss)
+            for (j in seq_len(ncol(obj)))
+            {
+                v <- obj[, j]
+                s <- paste0(nm, ".", ss[j])
+                if (verbose)
+                    .cat("    ", s, "\t[", storage.mode(v), "]")
+                add.gdsn(nd, s, v, compress=compress, closezip=TRUE)
+            }
+        } else {
+            if (verbose)
+                .cat("    ", nm, "\t[", storage.mode(obj), "]")
+            add.gdsn(nd, nm, obj, compress=compress, closezip=TRUE)
+        }
+    }
+    invisible()
 }
 
 
@@ -94,16 +127,13 @@ scArray <- function(gdsfile, varname)
     # check
     if (is.character(gdsfile))
     {
-        stopifnot(is.character(gdsfile), length(gdsfile)==1L)
         f <- openfn.gds(gdsfile, readonly=TRUE, allow.fork=TRUE,
             allow.duplicate=TRUE, use.abspath=FALSE)
         gdsfile <- new("SCArrayFileClass", f)
-    } else if (inherits(gdsfile, "gds.class") &&
-        !inherits(gdsfile, "SCArrayFileClass"))
+    } else if (identical(class(gdsfile), "gds.class"))
     {
         # should be exactly gds.class
-        if (class(gdsfile)[1L] == "gds.class")
-            gdsfile <- new("SCArrayFileClass", gdsfile)
+        gdsfile <- new("SCArrayFileClass", gdsfile)
     }
     if (!inherits(gdsfile, "SCArrayFileClass"))
         stop("'gdsfile' should be a file name, gds.class, or SCArrayFileClass.")
@@ -121,9 +151,7 @@ scExperiment <- function(gdsfile, sce=TRUE, use.names=TRUE, load.row=TRUE,
 {
     # check
     if (is.character(gdsfile))
-    {
         gdsfile <- scOpen(gdsfile, readonly=TRUE, allow.duplicate=TRUE)
-    }
     stopifnot(inherits(gdsfile, "SCArrayFileClass"))
     stopifnot(is.logical(sce), length(sce)==1L)
     stopifnot(is.logical(use.names), length(use.names)==1L)
@@ -240,8 +268,18 @@ scConvGDS <- function(obj, outfn, assay.name=NULL, save.sp=TRUE,
     }
 
     # check row and column names
-    if (anyDuplicated(rownm)) stop("rownames should be unique.")
-    if (anyDuplicated(colnm)) stop("colnames should be unique.")
+    if (anyDuplicated(rownm))
+    {
+        rownm <- make.unique(rownm)
+        warning("rownames are not unique, and 'make.unique()' is called",
+            immediate.=TRUE)
+    }
+    if (anyDuplicated(colnm))
+    {
+        colnm <- make.unique(colnm)
+        warning("colnames are not unique, and 'make.unique()' is called",
+            immediate.=TRUE)
+    }
 
     # need rownames and colnames
     if (is.null(rownm))
@@ -281,11 +319,19 @@ scConvGDS <- function(obj, outfn, assay.name=NULL, save.sp=TRUE,
     if (length(s))
     {
         s <- paste(s, collapse=",")
-        warning("    No [", s, "] available.", call.=FALSE, immediate.=TRUE)
+        warning("No [", s, "] available.", call.=FALSE, immediate.=TRUE)
     }
+    # check counts & logcounts
+    if (all(c("counts", "logcounts") %in% assay.name))
+    {
+        warning("'logcounts' should be excluded, since it can be ",
+            "generated from 'counts'.", call.=FALSE, immediate.=TRUE)
+    }
+
+    # for-each assay
     for (nm in assay.name)
     {
-        if (verbose) cat("    ", nm, "  !", sep="")
+        if (verbose) cat("    ", nm, "\t!", sep="")
         st <- type
         if (save.sp)
         {
@@ -317,12 +363,7 @@ scConvGDS <- function(obj, outfn, assay.name=NULL, save.sp=TRUE,
     if (!is.null(rowdat))
     {
         if (verbose) .cat("rowData:")
-        for (i in seq_len(ncol(rowdat)))
-        {
-            nm <- names(rowdat)[i]
-            .cat("    ", nm)
-            add.gdsn(nfd, nm, rowdat[,i], compress=compress, closezip=TRUE)
-        }
+        .add_dframe(nfd, rowdat, compress, verbose)
     }
 
     # add colData to sample.data
@@ -330,15 +371,7 @@ scConvGDS <- function(obj, outfn, assay.name=NULL, save.sp=TRUE,
     if (!is.null(coldat))
     {
         if (verbose) .cat("colData:")
-        for (i in seq_len(ncol(coldat)))
-        {
-            nm <- names(coldat)[i]
-            nm <- gsub("/", "_", nm, fixed=TRUE)
-            v <- coldat[,i]
-            if (verbose)
-                .cat("    ", nm, "\t[", storage.mode(v), "]")
-            add.gdsn(nfd, nm, v, compress=compress, closezip=TRUE)
-        }
+        .add_dframe(nfd, coldat, compress, verbose)
     }
 
     # add metadata to meta.data

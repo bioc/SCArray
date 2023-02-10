@@ -185,7 +185,21 @@ setMethod("scMemory", "SummarizedExperiment", function(x, ...)
 
 x_verbose <- function()
 {
-    isTRUE(getOption("SCArray.verbose", FALSE))
+    isTRUE(getOption("SCArray.verbose"))
+}
+
+x_progress_verbose <- function()
+{
+    isTRUE(getOption("SCArray.verbose")) ||
+    isTRUE(getOption("SCArray.progress.verbose"))
+}
+
+x_progress <- function(grid)
+{
+    if (x_progress_verbose())
+        txtProgressBar(0L, length(grid), style=3L, width=64L, file=stderr())
+    else
+        NULL
 }
 
 x_msg <- function(msg)

@@ -18,7 +18,8 @@ scConvGDS(obj, outfn, assay.name=NULL, save.sp=TRUE,
     \item{save.sp}{if \code{TRUE}, save it to a sparse matrix in GDS; otherwise,
         store dense matrix}
     \item{type}{numeric data type in the output file}
-    \item{compress}{the compression method, see \code{\link{add.gdsn}}}
+    \item{compress}{the compression method, see \code{\link{add.gdsn}}; or
+        \code{""} for no data compression}
     \item{clean}{TRUE}
     \item{verbose}{if \code{TRUE}, show information}
 }

@@ -371,6 +371,7 @@ SEXP c_rowMeans(SEXP mat, SEXP val, SEXP narm)
 			FOR_LOOP_i_j  if (!ISNAN(p[j])) { pv[j] += p[j]; pn[j]++; }
 		} else {
 			FOR_LOOP_i_j  pv[j] += p[j];
+			for (int j=0; j < nrow; j++) pn[j] += ncol;
 		}
 	} else if (is_int(mat))
 	{
@@ -379,19 +380,23 @@ SEXP c_rowMeans(SEXP mat, SEXP val, SEXP narm)
 		{
 			FOR_LOOP_i_j  if (p[j] != NA_INTEGER) { pv[j] += p[j]; pn[j]++; }
 		} else {
-			FOR_LOOP_i_j
-				if (p[j] != NA_INTEGER) pv[j] += p[j]; else { pv[j] = NA_REAL; break; }
+			FOR_LOOP_i_j  if (p[j] != NA_INTEGER) pv[j] += p[j];
+				else { pv[j] = NA_REAL; break; }
+			for (int j=0; j < nrow; j++) pn[j] += ncol;
 		}
 	} else if (is_sparse_seed(mat))
 	{
 		SparseMatrix M(mat);
+		for (int j=0; j < nrow; j++) pn[j] += ncol;  // number of non-NaN
 		if (TYPEOF(M.nzdata) == REALSXP)
 		{
 			double *p = REAL(M.nzdata);
 			if (na_rm)
 			{
-				FOR_LOOP_Mi  if (!ISNAN(p[i]))
-					{ int r=M.nzi_r[i]-1; pv[r] += p[i]; pn[r]++; }
+				FOR_LOOP_Mi  {
+					int r = M.nzi_r[i] - 1;
+					if (!ISNAN(p[i])) pv[r] += p[i]; else pn[r]--;
+				}
 			} else {
 				FOR_LOOP_Mi  pv[M.nzi_r[i]-1] += p[i];
 			}
@@ -399,17 +404,18 @@ SEXP c_rowMeans(SEXP mat, SEXP val, SEXP narm)
 			int *p = INTEGER(M.nzdata);  // INTSXP or LGLSXP
 			if (na_rm)
 			{
-				FOR_LOOP_Mi  if (p[i] != NA_INTEGER)
-					{ int r=M.nzi_r[i]-1; pv[r] += p[i]; pn[r]++; }
+				FOR_LOOP_Mi  {
+					int r = M.nzi_r[i] - 1;
+					if (p[i] != NA_INTEGER) pv[r] += p[i]; else pn[r]--;
+				}
 			} else {
-				FOR_LOOP_Mi
-					if (p[i] != NA_INTEGER) pv[M.nzi_r[i]-1] += p[i];
-					else pv[M.nzi_r[i]-1] = NA_REAL;
+				FOR_LOOP_Mi  {
+					int r = M.nzi_r[i] - 1;
+					if (p[i] != NA_INTEGER) pv[r] += p[i]; else pv[r] = NA_REAL;
+				}
 			}
 		}
 	}
-	if (!na_rm)
-		for (int j=0; j < nrow; j++) pn[j] += ncol;
 	// output
 	return val;
 }
@@ -529,6 +535,8 @@ SEXP c_rowWMeans(SEXP mat, SEXP val, SEXP w, SEXP narm)
 			FOR_LOOP_i_j  if (!ISNAN(p[j])) { pv[j] += p[j]*pw[i]; pn[j] += pw[i]; }
 		} else {
 			FOR_LOOP_i_j  pv[j] += p[j]*pw[i];
+			const double w = sum(pw, ncol);
+			for (int j=0; j < nrow; j++) pn[j] += w;
 		}
 	} else if (is_int(mat))
 	{
@@ -540,18 +548,22 @@ SEXP c_rowWMeans(SEXP mat, SEXP val, SEXP w, SEXP narm)
 		} else {
 			FOR_LOOP_i_j  if (p[j] != NA_INTEGER)
 				pv[j] += p[j]*pw[i]; else { pv[j] = NA_REAL; break; }
+			const double w = sum(pw, ncol);
+			for (int j=0; j < nrow; j++) pn[j] += w;
 		}
 	} else if (is_sparse_seed(mat))
 	{
 		SparseMatrix M(mat);
+		const double w = sum(pw, ncol);
+		for (int j=0; j < nrow; j++) pn[j] += w;
 		if (TYPEOF(M.nzdata) == REALSXP)
 		{
 			double *p = REAL(M.nzdata);
 			if (na_rm)
 			{
-				FOR_LOOP_Mi  if (!ISNAN(p[i])) {
-					int r=M.nzi_r[i]-1, c=M.nzi_c[i]-1;
-					pv[r] += p[i]*pw[c]; pn[r] += pw[c];
+				FOR_LOOP_Mi  {
+					int r = M.nzi_r[i]-1, c = M.nzi_c[i]-1;
+					if (!ISNAN(p[i])) pv[r] += p[i]*pw[c]; else pn[r] -= pw[c];
 				}
 			} else {
 				FOR_LOOP_Mi  pv[M.nzi_r[i]-1] += p[i]*pw[M.nzi_c[i]-1];
@@ -560,9 +572,9 @@ SEXP c_rowWMeans(SEXP mat, SEXP val, SEXP w, SEXP narm)
 			int *p = INTEGER(M.nzdata);  // INTSXP or LGLSXP
 			if (na_rm)
 			{
-				FOR_LOOP_Mi  if (p[i] != NA_INTEGER) {
-					int r=M.nzi_r[i]-1, c=M.nzi_c[i]-1;
-					pv[r] += p[i]*pw[c]; pn[r] += pw[c];
+				FOR_LOOP_Mi  {
+					int r = M.nzi_r[i]-1, c = M.nzi_c[i]-1;
+					if (p[i] != NA_INTEGER) pv[r] += p[i]*pw[c]; else pn[r] -= pw[c];
 				}
 			} else {
 				FOR_LOOP_Mi
@@ -570,12 +582,6 @@ SEXP c_rowWMeans(SEXP mat, SEXP val, SEXP w, SEXP narm)
 					else pv[M.nzi_r[i]-1] = NA_REAL;
 			}
 		}
-	}
-	if (!na_rm)
-	{
-		double w=0;
-		for (int i=0; i < ncol; i++) w += pw[i];
-		for (int j=0; j < nrow; j++) pn[j] += w;
 	}
 	block_idx_st += ncol;
 	// output
@@ -1260,7 +1266,6 @@ SEXP c_colWVars(SEXP mat, SEXP w, SEXP narm)
 			} else {
 				FOR_LOOP_Mi  {
 					int c = M.nzi_c[i] - 1, r = M.nzi_r[i] - 1;
-					sw[c] += pw[r];
 					v = p[i]*pw[r]; pv[c] += v; p2[c] += v*v;
 				}
 			}
@@ -1283,9 +1288,10 @@ SEXP c_colWVars(SEXP mat, SEXP w, SEXP narm)
 					int c = M.nzi_c[i] - 1, r = M.nzi_r[i] - 1;
 					if (p[i] != NA_INTEGER)
 					{
-						sw[c] += pw[r];
 						v = p[i]*pw[r]; pv[c] += v; p2[c] += v*v;
-					} else pv[c] = p2[c] = NA_REAL;
+					} else {
+						pv[c] = p2[c] = NA_REAL;
+					}
 				}
 			}
 		}

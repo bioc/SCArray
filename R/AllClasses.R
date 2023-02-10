@@ -174,3 +174,4 @@ SCArraySeed <- function(gds, varname)
 
 
 setMethod("path", "SCArraySeed", function(object) object@filename)
+setMethod("path", "SCArrayFileClass", function(object) object$filename)
