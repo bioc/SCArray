@@ -136,10 +136,72 @@ setMethod("+", c(SClass, "missing"),    # unary operators "+"
 setMethod("-", c(SClass, "missing"),    # unary operators "-"
     function(e1, e2) .sc_val_e1(callGeneric(as(e1, DClass))) )
 
+
 # Math
 setMethods("Math", SClass,
     function(x) .sc_val(callGeneric(as(x, DClass))) )
 
+# pmax2
+setMethod("pmax2", c(SClass, "vector"),
+    function(e1, e2) .sc_val_e1(callGeneric(as(e1, DClass), e2)) )
+setMethod("pmax2", c("vector", SClass),
+    function(e1, e2) .sc_val_e2(callGeneric(e1, as(e2, DClass))) )
+setMethod("pmax2", c(SClass, SClass),
+    function(e1, e2) .sc_val(callGeneric(as(e1, DClass), as(e2, DClass))) )
+
+# pmin2
+setMethod("pmin2", c(SClass, "vector"),
+    function(e1, e2) .sc_val_e1(callGeneric(as(e1, DClass), e2)) )
+setMethod("pmin2", c("vector", SClass),
+    function(e1, e2) .sc_val_e2(callGeneric(e1, as(e2, DClass))) )
+setMethod("pmin2", c(SClass, SClass),
+    function(e1, e2) .sc_val(callGeneric(as(e1, DClass), as(e2, DClass))) )
+
+
+# scale for each column
+x_scale <- function(x, center=TRUE, scale=TRUE)
+{
+    # check
+    x_check(x, "Calling SCArray:::x_scale() with %s ...")
+    stopifnot(is(x, "SC_GDSMatrix"))
+    stopifnot(is.logical(center) || is.numeric(center),
+        length(center)==1L || length(center)==ncol(x))
+    stopifnot(is.logical(scale) || is.numeric(scale),
+        length(scale)==1L || length(scale)==ncol(x))
+    # get center and/or scale
+    if (isTRUE(center) && isTRUE(scale))
+    {
+        v <- scColMeanVar(x, na.rm=TRUE)  # calculate mean and var together
+        center <- v[,1L]
+        scale <- sqrt(v[,2L])
+    } else if (isTRUE(center))
+    {
+        center <- colMeans(x)
+    } else if (isTRUE(scale))
+    {
+        scale <- rowSds(x)
+    }
+    center <- rep(as.numeric(center), length.out=ncol(x))
+    if (isFALSE(scale)) scale <- 1
+    scale <- rep(as.numeric(scale), length.out=ncol(x))
+    # do
+    x <- t(x)
+    attr_c <- !isTRUE(all(center==0))
+    attr_s <- !isTRUE(all(scale==1))
+    if (attr_c) x <- x - center
+    if (attr_s)
+    {
+        inv <- 1/scale
+        x <- x * inv
+    }
+    x <- t(x)
+    if (attr_c) attr(x, "scaled:center") <- center
+    if (attr_s) attr(x, "scaled:scale") <- scale
+    # output
+    x
+}
+
+setMethod("scale", SMatrix, x_scale)
 
 
 #######################################################################

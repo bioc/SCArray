@@ -8,6 +8,8 @@ useDynLib(SCArray,
     c_rowWVars, c_rowWVars_final, c_colWVars,
     c_rowMeanVar_final, c_colMeanVar,
     c_rowMins, c_colMins, c_rowMaxs, c_colMaxs, c_rowRanges, c_colRanges,
+    c_row_sum_grp, c_col_sum_grp,
+    c_row_anyNA, c_col_anyNA,
     c_rowCollapse_init, c_rowCollapse_done, c_rowCollapse,
     c_colCollapse_init, c_colCollapse)
 
@@ -21,7 +23,9 @@ exportMethods(
     rowVars, colVars, rowSds, colSds,
     rowWeightedVars, colWeightedVars, rowWeightedSds, colWeightedSds,
     rowMins, colMins, rowMaxs, colMaxs, rowRanges, colRanges,
-    rowCollapse, colCollapse
+    rowAnyNAs, colAnyNAs,
+    rowCollapse, colCollapse,
+    colsum, rowsum, scale, pmin2, pmax2
 )
 
 

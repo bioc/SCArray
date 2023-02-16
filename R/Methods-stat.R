@@ -106,6 +106,88 @@ setMethod("colSums2", SMatrix, x_colSums2)
 
 ################
 
+# row grouping, ii starts from ZERO
+.x_row_sum_grp <- function(x, ii, n_grp, na.rm)
+{
+    # block read
+    lst <- blockApply(x, function(bk, ii, n_grp, na.rm)
+    {
+        .Call(c_row_sum_grp, bk, ii, n_grp, na.rm)
+    }, grid=colAutoGrid(x), as.sparse=NA, ii=ii, n_grp=n_grp, na.rm=na.rm)
+    # merge
+    do.call(cbind, lst)
+}
+
+# column grouping, ii starts from ZERO
+.x_col_sum_grp <- function(x, ii, n_grp, na.rm)
+{
+    # block read
+    blockReduce(function(bk, v, ii, n_grp, na.rm)
+    {
+        st <- start(currentViewport())
+        .Call(c_col_sum_grp, bk, v, ii, st, n_grp, na.rm)
+    }, x, matrix(0, nrow(x), n_grp), grid=colAutoGrid(x), as.sparse=NA,
+        ii=ii, n_grp=n_grp, na.rm=na.rm)
+}
+
+x_rowsum_grp <- function(x, group, reorder=TRUE, na.rm=FALSE, ...)
+{
+    # check
+    x_check(x, "Calling SCArray:::x_rowsum_grp() with %s ...")
+    stopifnot(length(group) == nrow(x))
+    stopifnot(is.logical(reorder), length(reorder)==1L)
+    stopifnot(is.logical(na.rm), length(na.rm)==1L)
+    # grouping
+    grp <- unique(group)
+    grp <- grp[!is.na(grp)]
+    if (length(grp) == 0L) stop("No group value!")
+    if (isTRUE(reorder)) grp <- sort(grp)
+    ii <- match(group, grp) - 1L  # start from ZERO
+    # output
+    if (x_type(x) == 2L)
+    {
+        ans <- .x_col_sum_grp(t(x), ii, length(grp), na.rm)
+        ans <- t(ans)
+    } else {
+        ans <- .x_row_sum_grp(x, ii, length(grp), na.rm)
+    }
+    colnames(ans) <- colnames(x)
+    rownames(ans) <- grp
+    ans
+}
+
+x_colsum_grp <- function(x, group, reorder=TRUE, na.rm=FALSE, ...)
+{
+    # check
+    x_check(x, "Calling SCArray:::x_colsum_grp() with %s ...")
+    stopifnot(length(group) == ncol(x))
+    stopifnot(is.logical(reorder), length(reorder)==1L)
+    stopifnot(is.logical(na.rm), length(na.rm)==1L)
+    # grouping
+    grp <- unique(group)
+    grp <- grp[!is.na(grp)]
+    if (length(grp) == 0L) stop("No group value!")
+    if (isTRUE(reorder)) grp <- sort(grp)
+    ii <- match(group, grp) - 1L  # start from ZERO
+    # output
+    if (x_type(x) == 2L)
+    {
+        ans <- .x_row_sum_grp(t(x), ii, length(grp), na.rm)
+        ans <- t(ans)
+    } else {
+        ans <- .x_col_sum_grp(x, ii, length(grp), na.rm)
+    }
+    rownames(ans) <- rownames(x)
+    colnames(ans) <- grp
+    ans
+}
+
+setMethod("rowsum", SMatrix, x_rowsum_grp)
+setMethod("colsum", SMatrix, x_colsum_grp)
+
+
+################
+
 .x_row_prods <- function(x, na.rm, ...)
 {
     blockReduce(function(bk, v, na.rm) {
@@ -746,6 +828,64 @@ x_colRanges <- function(x, rows=NULL, cols=NULL, na.rm=FALSE)
 
 setMethod("rowRanges", SMatrix, x_rowRanges)
 setMethod("colRanges", SMatrix, x_colRanges)
+
+
+################
+
+.x_row_anyNA <- function(x, ...)
+{
+    # block read
+    blockReduce(function(bk, v) .Call(c_row_anyNA, bk, v),
+        x, init=logical(nrow(x)), grid=colAutoGrid(x), as.sparse=NA)
+}
+
+.x_col_anyNA <- function(x, ...)
+{
+    # block read
+    unlist(blockApply(x, function(bk) .Call(c_col_anyNA, bk),
+        grid=colAutoGrid(x), as.sparse=NA, ...))
+}
+
+x_row_anyNA <- function(x, rows=NULL, cols=NULL, ..., useNames=NA)
+{
+    x_check(x, "Calling SCArray:::x_row_anyNA() with %s ...")
+    k <- x_type(x)
+    if (k < 3L)
+    {
+        x <- x_subset(x, rows, cols)
+        if (k == 1L)
+            v <- .x_row_anyNA(x, ...)
+        else
+            v <- .x_col_anyNA(t(x), ...)
+        if (isTRUE(useNames)) names(v) <- rownames(x)
+        v
+    } else {  # 3
+        x_msg("Calling DelayedMatrixStats::rowAnyNAs() ...")
+        callNextMethod()
+    }
+}
+
+x_col_anyNA <- function(x, rows=NULL, cols=NULL, ..., useNames=NA)
+{
+    x_check(x, "Calling SCArray:::x_col_anyNA() with %s ...")
+    k <- x_type(x)
+    if (k < 3L)
+    {
+        x <- x_subset(x, rows, cols)
+        if (k == 1L)
+            v <- .x_col_anyNA(x, ...)
+        else
+            v <- .x_row_anyNA(t(x), ...)
+        if (isTRUE(useNames)) names(v) <- colnames(x)
+        v
+    } else {  # 3
+        x_msg("Calling DelayedMatrixStats::colAnyNAs() ...")
+        callNextMethod()
+    }
+}
+
+setMethod("rowAnyNAs", SMatrix, x_row_anyNA)
+setMethod("colAnyNAs", SMatrix, x_col_anyNA)
 
 
 ################
