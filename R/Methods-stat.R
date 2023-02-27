@@ -355,7 +355,10 @@ setMethod("colMeans2", SMatrix, x_colMeans2)
     # block read
     rv <- .parallel_col_reduce2(x, BPPARAM,
         Fun = function(bk, v, split, w, na.rm)
-            .Call(c_rowWMeans, bk, v, split, w, start(currentViewport()), na.rm),
+        {
+            .Call(c_rowWMeans, bk, v, split, w,
+                start(currentViewport(parent.frame(2L))), na.rm)
+        },
         InitFun = .double_nrow2,
         ReduceFun=`+`, w=w, na.rm=na.rm)
     # finally
@@ -568,7 +571,10 @@ setMethod("colSds", SMatrix, x_colSds)
     # block read
     rv <- .parallel_col_reduce2(x, BPPARAM,
         Fun = function(bk, v, split, w, na.rm)
-            .Call(c_rowWVars, bk, v, split, w, start(currentViewport()), na.rm),
+        {
+            .Call(c_rowWVars, bk, v, split, w,
+                start(currentViewport(parent.frame(2L))), na.rm)
+        },
         InitFun = .double_nrow4,
         ReduceFun=`+`, w=w, na.rm=na.rm)
     # finally

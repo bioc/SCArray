@@ -344,6 +344,8 @@ scColAutoGrid <- function(x, force=FALSE, nnzero=NULL)
     .Call(c_get_split, num, nw, double(nw+1L))
 }
 
+####
+
 .parallel_col_apply <- function(x, BPPARAM, Fun, as.sparse=NA, .flatten=TRUE,
     .progress=NA, ...)
 {
@@ -355,7 +357,7 @@ scColAutoGrid <- function(x, force=FALSE, nnzero=NULL)
     sp <- .get_split(ncol(x), BPPARAM)
     if (length(sp) > 1L)
     {
-        x_msg(sprintf("Distributed to %d processes ...", length(sp)))
+        x_msg(sprintf("\\=> Distributed to %d processes ...", length(sp)))
         # distribute
         lst <- bplapply(sp, function(s, Fun, x, as.sparse, ...)
         {
@@ -391,6 +393,8 @@ scColAutoGrid <- function(x, force=FALSE, nnzero=NULL)
     ans
 }
 
+####
+
 .parallel_col_reduce <- function(x, BPPARAM, Fun, InitFun, ReduceFun,
     as.sparse=NA, .progress=NA, ...)
 {
@@ -402,7 +406,7 @@ scColAutoGrid <- function(x, force=FALSE, nnzero=NULL)
     sp <- .get_split(ncol(x), BPPARAM)
     if (length(sp) > 1L)
     {
-        x_msg(sprintf("Distributed to %d processes ...", length(sp)))
+        x_msg(sprintf("\\=> Distributed to %d processes ...", length(sp)))
         # distribute
         lst <- bplapply(sp, function(s, Fun, x, as.sparse, ...)
         {
@@ -443,30 +447,60 @@ scColAutoGrid <- function(x, force=FALSE, nnzero=NULL)
     }
 }
 
-.parallel_col_reduce2 <- function(x, BPPARAM, Fun, InitFun, ReduceFun, ...)
+####
+
+.parallel_col_reduce2 <- function(x, BPPARAM, Fun, InitFun, ReduceFun,
+    as.sparse=NA, .progress=NA, ...)
 {
     stopifnot(is.null(BPPARAM) || is(BPPARAM, "BiocParallelParam"))
+    # progress bar
+    stopifnot(is.logical(.progress), length(.progress)==1L)
+    if (is.na(.progress)) .progress <- x_progress_verbose()
     # split columns
     sp <- .get_split(ncol(x), BPPARAM)
     if (length(sp) > 1L)
     {
-        x_msg(sprintf("Distributed to %d processes ...", length(sp)))
+        x_msg(sprintf("\\=> Distributed to %d processes ...", length(sp)))
         # distribute
-        lst <- bplapply(sp, function(s, Fun, x, ...)
+        lst <- bplapply(sp, function(s, Fun, x, as.sparse, ...)
         {
             # sub columns
             y <- x[, seq.int(s[1L], s[2L]), drop=FALSE]
             attr(y, "col_range") <- s
+            # initial value
+            if (is.function(InitFun))
+                init <- InitFun(y, split=s, ...)
+            else
+                init <- InitFun
             # reduce the sub matrix
-            blockReduce(Fun, y, InitFun(y, ...), grid=colAutoGrid(y),
-                as.sparse=NA, split=s, ...)
-        }, Fun=Fun, x=x, BPPARAM=BPPARAM, ...)
+            blockReduce(Fun, y, init, grid=colAutoGrid(y), as.sparse=as.sparse,
+                split=s, ...)
+        }, BPPARAM=BPPARAM, Fun=Fun, x=x, as.sparse=as.sparse, ...)
         # reduce
         base::Reduce(ReduceFun, lst)
     } else {
         # sequentially
-        blockReduce(Fun, x, InitFun(x, ...), grid=colAutoGrid(x),
-            as.sparse=NA, split=c(1L, ncol(x)), ...)
+        sp <- c(1L, ncol(x))
+        if (is.function(InitFun))
+            init <- InitFun(x, split=sp, ...)
+        else
+            init <- InitFun
+        gd <- colAutoGrid(x)
+        if (.progress)
+        {
+            pb <- txtProgressBar(0L, length(gd), style=3L, width=64L,
+                file=stderr())
+            on.exit(close(pb))
+            blockReduce(function(b, v, .fun, .pb, ...)
+            {
+                setTxtProgressBar(.pb, currentBlockId())
+                .fun(b, v, ...)
+            }, x, init, grid=gd, as.sparse=as.sparse, .fun=Fun, .pb=pb,
+                split=sp, ...)
+        } else {
+            blockReduce(Fun, x, init, grid=gd, as.sparse=as.sparse, split=sp,
+                ...)
+        }
     }
 }
 
