@@ -201,7 +201,7 @@ setMethod("colsum", SMatrix, x_colsum_grp)
 {
     .parallel_col_reduce(x, BPPARAM,
         Fun = function(bk, v, na.rm) .Call(c_rowProds, bk, v, na.rm),
-        InitFun = function(x) rep(1, nrow(x)),
+        InitFun = function(x, ...) rep(1, nrow(x)),
         ReduceFun=`*`, as.sparse=FALSE, na.rm=na.rm)
 }
 
@@ -715,7 +715,7 @@ setMethod("colWeightedSds", SMatrix, x_colWeightedSds)
 {
     .parallel_col_reduce(x, BPPARAM,
         Fun = function(bk, v, na.rm) .Call(c_rowMins, bk, v, na.rm),
-        InitFun = function(x) rep(Inf, nrow(x)),
+        InitFun = function(x, ...) rep(Inf, nrow(x)),
         ReduceFun=base::pmin, na.rm=na.rm)
 }
 
@@ -762,7 +762,7 @@ setMethod("colMins", SMatrix, x_colMins)
 {
     .parallel_col_reduce(x, BPPARAM,
         Fun = function(bk, v, na.rm) .Call(c_rowMaxs, bk, v, na.rm),
-        InitFun = function(x) rep(-Inf, nrow(x)),
+        InitFun = function(x, ...) rep(-Inf, nrow(x)),
         ReduceFun=base::pmax, na.rm=na.rm)
 }
 
@@ -809,7 +809,8 @@ setMethod("colMaxs", SMatrix, x_colMaxs)
 {
     .parallel_col_reduce(x, BPPARAM,
         Fun = function(bk, v, na.rm) .Call(c_rowRanges, bk, v, na.rm),
-        InitFun = function(x) t(matrix(c(Inf, -Inf), nrow=2L, ncol=nrow(x))),
+        InitFun = function(x, ...)
+            t(matrix(c(Inf, -Inf), nrow=2L, ncol=nrow(x))),
         ReduceFun = function(v1, v2)
             cbind(base::pmin(v1[,1L], v2[,1L]), base::pmax(v1[,2L], v2[,2L])),
         na.rm=na.rm)
@@ -859,7 +860,7 @@ setMethod("colRanges", SMatrix, x_colRanges)
 {
     .parallel_col_reduce(x, BPPARAM,
         Fun = function(bk, v) .Call(c_row_anyNA, bk, v),
-        InitFun = function(x) logical(nrow(x)),
+        InitFun = function(x, ...) logical(nrow(x)),
         ReduceFun=`|`)
 }
 
