@@ -92,8 +92,8 @@ x_crossprod_x <- function(x, y)
         nworker <- .get_num_worker(bp)
         # split rows & columns (not larger than 2GB)
         ngrp <- floor(min(getAutoBlockSize(), 2^31) / (ncol(x)^2*8))
-        sp_r <- .get_split(nrow(x), min(ngrp, nworker))
-        sp_c <- .get_split(ncol(x), floor(nworker/length(sp_r)))
+        sp_r <- scNumSplit(nrow(x), min(ngrp, nworker))
+        sp_c <- scNumSplit(ncol(x), floor(nworker/length(sp_r)))
         # do
         if (length(sp_r)!=1L || length(sp_c)!=1L)
         {

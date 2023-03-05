@@ -1,5 +1,7 @@
-CHANGES IN VERSION 1.7.10
+CHANGES IN VERSION 1.7.13
 -------------------------
+
+    o new function `scNumSplit()`
 
     o update the vignettes
 

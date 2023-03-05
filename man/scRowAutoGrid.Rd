@@ -21,8 +21,8 @@ scColAutoGrid(x, force=FALSE, nnzero=NULL)
 }
 \details{
     The functions return regular RegularArrayGrid (calling \code{rowAutoGrid()}
-or \code{colAutoGrid}), when \code{x} is neither a sparse in-memory matrix nor a
-sparse \code{SC_GDSMatrix} object; otherwise, make use of the information of
+or \code{colAutoGrid}), when \code{x} is neither a sparse in-memory matrix nor
+a sparse \code{SC_GDSMatrix} object; otherwise, make use of the information of
 the numbers of non-zeros to create ArbitraryArrayGrid for more efficient grids.
     When \code{force} is applicable and \code{force=TRUE}, the functions
 return \code{ArbitraryArrayGrid} which needs the \code{nnzero} values. For
@@ -37,12 +37,15 @@ efficient when \code{nnzero} is pre-defined.
 \code{RegularArrayGrid}, the functions return \code{RegularArrayGrid} instead
 when \code{force} is not \code{TRUE}.
 
-    Usually, \code{scRowAutoGrid()}/\code{scColAutoGrid()} are used together
-with \code{blockApply(, as.sparse=NA)} or \code{blockReduce(, as.sparse=NA)}
-to take advantage of sparse matrices.
+    Usually, \code{gd <- scRowAutoGrid()} or \code{gd <- scColAutoGrid()} is
+used together with \code{blockApply(, grid=gd, as.sparse=attr(gd, "as.sparse"))}
+or \code{blockReduce(, grid=gd, as.sparse=attr(gd, "as.sparse"))} to take
+advantage of sparse matrices.
 }
 \value{
     Return an object of \code{RegularArrayGrid} or \code{ArbitraryArrayGrid}.
+\code{attr(, "as.sparse")} is a suggested logical value for \code{as.sparse}
+in \code{blockApply()} or \code{blockReduce()}.
 }
 
 \author{Xiuwen Zheng}

@@ -253,18 +253,20 @@ scRowAutoGrid <- function(x, force=FALSE, nnzero=NULL)
     if (!is.null(nnzero))
     {
         stopifnot(is.numeric(nnzero), length(nnzero)==nrow(x))
+        if (is.double(nnzero)) nnzero <- as.integer(nnzero)
         z <- nnzero < 0L
         if (anyNA(z)) stop("'nnzero' should have no NA.")
         if (any(z)) stop("'nnzero' should be non-negative.")
-        if (is.double(nnzero)) nnzero <- as.integer(nnzero)
     }
     # do
     ans <- rowAutoGrid(x)
+    as.sparse <- NA
     is_sp <- is(x, "sparseMatrix")
     if ((is(x, SMatrix) && is_sparse(x)) || is_sp)
     {
         if (isTRUE(force) || is_sp || x_type(x)==1L)
         {
+            # x_type(x)==1L (not transposed, column-oriented)
             # the number of non-zeros for each row
             if (is.null(nnzero))
                 nnzero <- as.integer(row_nnzero(x, na.counted=TRUE))
@@ -272,10 +274,12 @@ scRowAutoGrid <- function(x, force=FALSE, nnzero=NULL)
             bs <- .Call(c_sparse_blocksize, getAutoBlockSize(),
                 .Machine$integer.max / ncol(x), nnzero, integer(length(nnzero)))
             v <- ArbitraryArrayGrid(list(cumsum(bs), ncol(x)))
-            if (isTRUE(force) || length(v)<=length(ans)) ans <- v
+            as.sparse <- isTRUE(force) || length(v)<=length(ans)
+            if (as.sparse) ans <- v
         }
     }
     # output
+    attr(ans, "as.sparse") <- as.sparse
     ans
 }
 
@@ -287,18 +291,20 @@ scColAutoGrid <- function(x, force=FALSE, nnzero=NULL)
     if (!is.null(nnzero))
     {
         stopifnot(is.numeric(nnzero), length(nnzero)==ncol(x))
+        if (is.double(nnzero)) nnzero <- as.integer(nnzero)
         z <- nnzero < 0L
         if (anyNA(z)) stop("'nnzero' should have no NA.")
         if (any(z)) stop("'nnzero' should be non-negative.")
-        if (is.double(nnzero)) nnzero <- as.integer(nnzero)
     }
     # do
     ans <- colAutoGrid(x)
+    as.sparse <- NA
     is_sp <- is(x, "sparseMatrix")
     if ((is(x, SMatrix) && is_sparse(x)) || is_sp)
     {
         if (isTRUE(force) || is_sp || x_type(x)==2L)
         {
+            # x_type(x)==2L (transposed, row-oriented)
             # the number of non-zeros for each column
             if (is.null(nnzero))
                 nnzero <- as.integer(col_nnzero(x, na.counted=TRUE))
@@ -306,10 +312,12 @@ scColAutoGrid <- function(x, force=FALSE, nnzero=NULL)
             bs <- .Call(c_sparse_blocksize, getAutoBlockSize(),
                 .Machine$integer.max / nrow(x), nnzero, integer(length(nnzero)))
             v <- ArbitraryArrayGrid(list(nrow(x), cumsum(bs)))
-            if (isTRUE(force) || length(v)<=length(ans)) ans <- v
+            as.sparse <- isTRUE(force) || length(v)<=length(ans)
+            if (as.sparse) ans <- v
         }
     }
     # output
+    attr(ans, "as.sparse") <- as.sparse
     ans
 }
 
@@ -325,25 +333,6 @@ scColAutoGrid <- function(x, force=FALSE, nnzero=NULL)
         bpnworkers(BPPARAM)
 }
 
-.get_split <- function(num, BPPARAM)
-{
-    # check
-    stopifnot(is.numeric(num), length(num)==1L)
-    # number of workers
-    if (is.null(BPPARAM))
-        nw <- 1L
-    else if (is.numeric(BPPARAM))
-        nw <- BPPARAM
-    else if (is(BPPARAM, "BiocParallelParam"))
-        nw <- bpnworkers(BPPARAM)
-    else {
-        stop("'BPPARAM' should be NULL, an integer or ",
-            "a BiocParallelParam object.")
-    }
-    # list
-    .Call(c_get_split, num, nw, double(nw+1L))
-}
-
 ####
 
 .parallel_col_apply <- function(x, BPPARAM, Fun, as.sparse=NA, .flatten=TRUE,
@@ -354,7 +343,7 @@ scColAutoGrid <- function(x, force=FALSE, nnzero=NULL)
     stopifnot(is.logical(.progress), length(.progress)==1L)
     if (is.na(.progress)) .progress <- x_progress_verbose()
     # split columns
-    sp <- .get_split(ncol(x), BPPARAM)
+    sp <- scNumSplit(ncol(x), BPPARAM)
     if (length(sp) > 1L)
     {
         x_msg(sprintf("\\=> Distributed to %d processes ...", length(sp)))
@@ -403,7 +392,7 @@ scColAutoGrid <- function(x, force=FALSE, nnzero=NULL)
     stopifnot(is.logical(.progress), length(.progress)==1L)
     if (is.na(.progress)) .progress <- x_progress_verbose()
     # split columns
-    sp <- .get_split(ncol(x), BPPARAM)
+    sp <- scNumSplit(ncol(x), BPPARAM)
     if (length(sp) > 1L)
     {
         x_msg(sprintf("\\=> Distributed to %d processes ...", length(sp)))
@@ -457,7 +446,7 @@ scColAutoGrid <- function(x, force=FALSE, nnzero=NULL)
     stopifnot(is.logical(.progress), length(.progress)==1L)
     if (is.na(.progress)) .progress <- x_progress_verbose()
     # split columns
-    sp <- .get_split(ncol(x), BPPARAM)
+    sp <- scNumSplit(ncol(x), BPPARAM)
     if (length(sp) > 1L)
     {
         x_msg(sprintf("\\=> Distributed to %d processes ...", length(sp)))

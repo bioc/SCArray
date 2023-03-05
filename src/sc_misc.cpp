@@ -25,7 +25,7 @@
 extern "C"
 {
 
-// ====  .get_split  ====
+// ====  scNumSplit  ====
 
 inline static SEXP range(int64_t st, int64_t ed)
 {
