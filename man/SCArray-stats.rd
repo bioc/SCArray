@@ -159,7 +159,9 @@ scColMeanVar(x, na.rm=FALSE, useNames=FALSE, ...)
     \item{idxs}{An index vector specifying the columns (rows) to be extracted;
         the vector will be reused if the length is less than the number of
         columns or rows}
-    \item{...}{additional arguments passed to specific methods}
+    \item{...}{additional arguments passed to specific methods: \code{BPPARAM}
+        can be specified (if not specified, \code{getAutoBPPARAM()} is used
+        instead)}
 }
 
 \details{
@@ -176,6 +178,8 @@ the GDS file.
             \link{DelayedMatrix} objects.
         \item \link{DelayedMatrix} objects.
         \item \link[base]{matrix} objects in base R.
+        \item \link{getAutoBPPARAM}, \link{BiocParallelParam} for parallel
+            processing,
     }
 }
 
