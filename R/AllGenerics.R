@@ -228,10 +228,10 @@ setGeneric("scMemory", function(x, ...) x)
 
 setMethod("scMemory", "DelayedArray", function(x, ...)
 {
-    if (is_sparse(x))
+    if (is_sparse(x) && length(dim(x))==2L)
         as(x, "sparseMatrix")
     else
-        as.matrix(x)
+        as.array(x)
 })
 
 setMethod("scMemory", "SummarizedExperiment", function(x, ...)
@@ -348,6 +348,7 @@ scColAutoGrid <- function(x, force=FALSE, nnzero=NULL)
     {
         x_msg(sprintf("\\=> Distributed to %d processes ...", length(sp)))
         # distribute
+        if (!is.null(dimnames(x))) dimnames(x) <- NULL  # no need dimnames
         lst <- bplapply(sp, function(s, Fun, x, as.sparse, ...)
         {
             # sub columns
@@ -397,6 +398,7 @@ scColAutoGrid <- function(x, force=FALSE, nnzero=NULL)
     {
         x_msg(sprintf("\\=> Distributed to %d processes ...", length(sp)))
         # distribute
+        if (!is.null(dimnames(x))) dimnames(x) <- NULL  # no need dimnames
         lst <- bplapply(sp, function(s, Fun, x, as.sparse, ...)
         {
             # sub columns
@@ -451,6 +453,7 @@ scColAutoGrid <- function(x, force=FALSE, nnzero=NULL)
     {
         x_msg(sprintf("\\=> Distributed to %d processes ...", length(sp)))
         # distribute
+        if (!is.null(dimnames(x))) dimnames(x) <- NULL  # no need dimnames
         lst <- bplapply(sp, function(s, Fun, x, as.sparse, ...)
         {
             # sub columns
