@@ -150,7 +150,7 @@ setMethod("is_sparse", "SCArraySeed", .is_sparse_sc_seed)
     }
 }
 
-setMethod("extract_sparse_array", "SCArraySeed", .extract_sparse_sc_seed)
+setMethod("OLD_extract_sparse_array", "SCArraySeed", .extract_sparse_sc_seed)
 
 
 # SCArraySeed constructor
