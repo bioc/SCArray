@@ -17,7 +17,8 @@ scHDF2GDS(h5_fn, outfn, group=c("matrix", "mm10"), feature_path=character(),
         existing group in the HDF5 file is used; \code{"mm10"} is usually
         used for 10x Genomics datasets}
     \item{feature_path}{a character vector for feature variables, otherwise
-        detecting automatically}
+        detecting automatically using "genes", "gene_names" and "features/*"
+        when available}
     \item{type}{numeric data type in the output file}
     \item{compress}{the compression method, see \code{\link{add.gdsn}}}
     \item{clean}{TRUE}

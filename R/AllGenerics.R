@@ -342,13 +342,14 @@ scColAutoGrid <- function(x, force=FALSE, nnzero=NULL)
     # progress bar
     stopifnot(is.logical(.progress), length(.progress)==1L)
     if (is.na(.progress)) .progress <- x_progress_verbose()
+    # no need dimnames
+    if (!is.null(dimnames(x))) dimnames(x) <- NULL
     # split columns
     sp <- scNumSplit(ncol(x), BPPARAM)
     if (length(sp) > 1L)
     {
         x_msg(sprintf("\\=> Distributed to %d processes ...", length(sp)))
         # distribute
-        if (!is.null(dimnames(x))) dimnames(x) <- NULL  # no need dimnames
         lst <- bplapply(sp, function(s, Fun, x, as.sparse, ...)
         {
             # sub columns
@@ -392,13 +393,14 @@ scColAutoGrid <- function(x, force=FALSE, nnzero=NULL)
     # progress bar
     stopifnot(is.logical(.progress), length(.progress)==1L)
     if (is.na(.progress)) .progress <- x_progress_verbose()
+    # no need dimnames
+    if (!is.null(dimnames(x))) dimnames(x) <- NULL
     # split columns
     sp <- scNumSplit(ncol(x), BPPARAM)
     if (length(sp) > 1L)
     {
         x_msg(sprintf("\\=> Distributed to %d processes ...", length(sp)))
         # distribute
-        if (!is.null(dimnames(x))) dimnames(x) <- NULL  # no need dimnames
         lst <- bplapply(sp, function(s, Fun, x, as.sparse, ...)
         {
             # sub columns
@@ -447,13 +449,14 @@ scColAutoGrid <- function(x, force=FALSE, nnzero=NULL)
     # progress bar
     stopifnot(is.logical(.progress), length(.progress)==1L)
     if (is.na(.progress)) .progress <- x_progress_verbose()
+    # no need dimnames
+    if (!is.null(dimnames(x))) dimnames(x) <- NULL
     # split columns
     sp <- scNumSplit(ncol(x), BPPARAM)
     if (length(sp) > 1L)
     {
         x_msg(sprintf("\\=> Distributed to %d processes ...", length(sp)))
         # distribute
-        if (!is.null(dimnames(x))) dimnames(x) <- NULL  # no need dimnames
         lst <- bplapply(sp, function(s, Fun, x, as.sparse, ...)
         {
             # sub columns
