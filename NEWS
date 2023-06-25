@@ -1,7 +1,9 @@
-CHANGES IN VERSION 1.8.1
+CHANGES IN VERSION 1.8.2
 -------------------------
 
     o progress bar in `scHDF2GDS()`
+
+    o update `%*%` with SC_GDSMatrix
 
 
 CHANGES IN VERSION 1.8.0

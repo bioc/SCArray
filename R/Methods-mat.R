@@ -12,6 +12,11 @@
 
 #######################################################################
 
+.is_mem_matrix <- function(m)
+{
+    is.matrix(m) || is(m, "Matrix")
+}
+
 .crossprod_x_row_seq <- function(x)
 {
     gd <- rowAutoGrid(x)
@@ -80,14 +85,14 @@
 }
 
 
-# t(x) %*% y, y = x
+# t(x) %*% y, where y = x
 x_crossprod_x <- function(x, y)
 {
     x_check(x, "Calling SCArray:::x_crossprod_x() with %s ...")
     k <- x_type(x)
     if (k == 2L)
     {
-        # efficient direction of 'x' is Y (row), result in [ ncol(x), ncol(x) ]
+        # efficient direction of 'x' is row, result in [ ncol(x), ncol(x) ]
         bp <- getAutoBPPARAM()
         nworker <- .get_num_worker(bp)
         # split rows & columns (not larger than 2GB)
@@ -105,11 +110,15 @@ x_crossprod_x <- function(x, y)
             for (i in sp_r)
                 for (j in sp_c) sp <- c(sp, list(c(i, j)))
             # distribute
-            .crossprod_x_row_parallel(x, sp, bp)
+            rv <- .crossprod_x_row_parallel(x, sp, bp)
         } else {
             # sequentially
-            .crossprod_x_row_seq(x)
+            rv <- .crossprod_x_row_seq(x)
         }
+        # output
+        s <- colnames(x)
+        if (!is.null(s)) dimnames(rv) <- list(s, s)
+        rv
     } else {
         crossprod(as(x, DMatrix))
     }
@@ -118,25 +127,127 @@ x_crossprod_x <- function(x, y)
 
 ################
 
-# x %*% t(y), y = x
+# x %*% t(y), where y = x
 x_tcrossprod_x <- function(x, y)
 {
     x_check(x, "Calling SCArray:::x_tcrossprod_x() with %s ...")
     k <- x_type(x)
     if (k == 1L)
     {
-        # efficient direction of 'x' is X (col), result in [ nrow(x), nrow(x) ]
-        blockReduce(function(bk, v)
+        # efficient direction of 'x' is column, result in [ nrow(x), nrow(x) ]
+        rv <- blockReduce(function(bk, v)
         {
             if (is(bk, "SparseArraySeed")) bk <- as(bk, "CsparseMatrix")
             .Call(c_add, v, as.matrix(tcrossprod(bk)))
         }, x, matrix(0.0, nrow(x), nrow(x)), grid=colAutoGrid(x), as.sparse=NA)
+        # output
+        s <- rownames(x)
+        if (!is.null(s)) dimnames(rv) <- list(s, s)
+        rv
     } else {
         tcrossprod(as(x, DMatrix))
     }
 }
 
 
-setMethod("crossprod", c("SC_GDSMatrix", "missing"), x_crossprod_x)
-setMethod("tcrossprod", c("SC_GDSMatrix", "missing"), x_tcrossprod_x)
+setMethod("crossprod", c(SMatrix, "missing"), x_crossprod_x)
+setMethod("crossprod", c(SMatrix, "ANY"), function(x, y) t(x) %*% y)
+setMethod("crossprod", c("ANY", SMatrix), function(x, y) t(x) %*% y)
+
+setMethod("tcrossprod", c(SMatrix, "missing"), x_tcrossprod_x)
+setMethod("tcrossprod", c(SMatrix, "ANY"), function(x, y) x %*% t(y))
+setMethod("tcrossprod", c("ANY", SMatrix), function(x, y) x %*% t(y))
+
+
+################
+
+# x %*% y, where x is GDS and y is matrix
+x_mul_x_y0 <- function(x, y)
+{
+    x_msg("\\=> Calling SCArray:::x_mul_x_y0()")
+    # initialize
+    rnames <- rownames(x)
+    cnames <- colnames(y)
+    if (!is.null(dimnames(x))) dimnames(x) <- NULL
+    # if (!is.null(dimnames(y))) dimnames(y) <- list(NULL, NULL)
+    # block processing
+    gd <- colAutoGrid(x)
+    pb <- x_progress(gd)
+    if (!is.null(pb)) on.exit(close(pb))
+    rv <- blockReduce(function(bk, v, ym, pb)
+    {
+        if (is(bk, "SparseArraySeed")) bk <- as(bk, "CsparseMatrix")
+        vw <- currentViewport()
+        ii <- start(vw)[2L]:end(vw)[2L]
+        if (!is.null(pb))
+            setTxtProgressBar(pb, currentBlockId())
+        .Call(c_add, v, as.matrix(bk %*% ym[ii, , drop=FALSE]))
+    }, x, matrix(0, nrow(x), ncol(y)), grid=gd, as.sparse=NA, ym=y, pb=pb)
+    # output
+    rownames(rv) <- rnames
+    colnames(rv) <- cnames
+    rv
+}
+
+
+x_multiply_x_yANY <- function(x, y)
+{
+    # check
+    x_check(x, "Calling SCArray:::x_multiply_x_yANY() with %s ...")
+    if (!.is_mem_matrix(y))
+    {
+        if (!is.vector(y))
+        {
+            stop(paste("Matrix multiplication of a", class(x), "by a",
+                class(y), "object is not supported"))
+        }
+        y <- matrix(y, ncol=1L)
+    }
+    if (ncol(x) != nrow(y))
+        stop("non-conformable arguments")
+    # compute ...
+    k <- x_type(x)
+    if (k == 1L)
+    {
+        # efficient direction of 'x' is column
+        x_mul_x_y0(x, y)
+    } else {
+        as.matrix(as(x, DMatrix) %*% y)
+    }
+}
+
+x_multiply_xANY_y <- function(x, y)
+{
+    # check
+    x_check(y, "Calling SCArray:::x_multiply_xANY_y() with %s ...")
+    if (!.is_mem_matrix(x))
+    {
+        if (!is.vector(x))
+        {
+            stop(paste("Matrix multiplication of a", class(x), "object by a",
+                class(y), "is not supported"))
+        }
+        x <- matrix(x, nrow=1L)
+    }
+    if (ncol(x) != nrow(y))
+        stop("non-conformable arguments")
+    # compute ...
+    k <- x_type(y)
+    if (k == 2L)
+    {
+        # efficient direction of 'y' is row
+        t(x_mul_x_y0(t(y), t(x)))
+    } else {
+        as.matrix(x %*% as(y, DMatrix))
+    }
+}
+
+x_multiply_x_y <- function(x, y)
+{
+    as.matrix(as(x, DMatrix) %*% as(y, DMatrix))
+}
+
+setMethod("%*%", c(SMatrix, "ANY"), x_multiply_x_yANY)
+setMethod("%*%", c("ANY", SMatrix), x_multiply_xANY_y)
+# setMethod("%*%", c(SMatrix, SMatrix), x_multiply_x_y)
 

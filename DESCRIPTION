@@ -1,8 +1,8 @@
 Package: SCArray
 Type: Package
 Title: Large-scale single-cell RNA-seq data manipulation with GDS files
-Version: 1.8.1
-Date: 2023-06-09
+Version: 1.8.2
+Date: 2023-06-24
 Depends: R (>= 3.5.0), gdsfmt (>= 1.35.4), methods, DelayedArray (>= 0.16.0)
 Imports: S4Vectors, utils, Matrix, BiocParallel, DelayedMatrixStats,
         SummarizedExperiment, SingleCellExperiment, BiocSingular
