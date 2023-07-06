@@ -20,6 +20,12 @@
 \alias{dimnames<-}
 \alias{dimnames<-,SC_GDSArray,ANY-method}
 
+\alias{\%*\%}
+\alias{\%*\%,SC_GDSMatrix,ANY-method}
+\alias{\%*\%,ANY,SC_GDSMatrix-method}
+\alias{crossprod}
+\alias{tcrossprod}
+
 \alias{scale}
 \alias{scale,SC_GDSMatrix-method}
 \alias{pmin2}

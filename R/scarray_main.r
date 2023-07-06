@@ -477,8 +477,21 @@ scMEX2GDS <- function(feature_fn, barcode_fn, mtx_fn, outfn,
         int32="sp.int32", stop("Invalid 'type': ", type))
     nd <- add.gdsn(outf, "counts", valdim=c(nrow(mt), 0L), compress=compress,
         storage=st)
-    blockApply(mt, function(x) { append.gdsn(nd, x); NULL },
-        grid=colAutoGrid(mt), BPPARAM=NULL)
+    gd <- colAutoGrid(mt)
+    if (verbose)
+    {
+        pb <- txtProgressBar(0L, length(gd), style=3L, width=64L, file=stderr())
+        blockReduce(function(x, v)
+            {
+                append.gdsn(nd, x)
+                setTxtProgressBar(pb, currentBlockId())
+                NULL
+            }, mt, init=NULL, grid=gd, as.sparse=FALSE)
+        close(pb)
+    } else {
+        blockReduce(function(x, v) append.gdsn(nd, x),
+            mt, init=NULL, grid=gd, as.sparse=FALSE)
+    }
     readmode.gdsn(nd)
     if (verbose) { cat("    |"); print(nd) }
 
@@ -531,7 +544,7 @@ scHDF2GDS <- function(h5_fn, outfn, group=c("matrix", "mm10"),
 
     # check packages
     if (!eval(q_rhdf5))
-        stop("The package 'rhdf5' should be installed.")
+        stop("The package 'rhdf5' and 'HDF5Array' should be installed.")
     if (!eval(q_HDF5Array))
         stop("The package 'HDF5Array' should be installed.")
 
@@ -540,7 +553,11 @@ scHDF2GDS <- function(h5_fn, outfn, group=c("matrix", "mm10"),
     a$group[a$group == "/"] <- ""
     a$path <- substring(paste(a$group, a$name, sep="/"), 2L)
     sep <- ifelse(grepl("/$", group), "", "/")
-    if (verbose) .cat("Load ", sQuote(h5_fn))
+    if (verbose)
+    {
+        .cat("Load ", sQuote(h5_fn))
+        .cat("    (", .pretty(file.size(h5_fn)), " bytes)")
+    }
     g <- intersect(group, a$path)
     if (length(g) == 0L)
         stop("No hdf5 group for sparse matrix.")
@@ -564,18 +581,32 @@ scHDF2GDS <- function(h5_fn, outfn, group=c("matrix", "mm10"),
     {
         feature_path <- c("genes", "gene_names",
             "features/id", "features/name", "features/feature_type",
-            "features/genome")
+            "features/genome", "features/")
     }
     test_path <- paste(group, feature_path, sep="/")
+    z <- grepl("/$", test_path)
+    test_path2 <- test_path[z]   # search the sub directory
+    test_path  <- test_path[!z]
     used <- intersect(test_path, a$path)
+    for (nm in test_path2)
+    {
+        s <- a$path[substr(a$path, 1L, nchar(nm)) == nm]
+        z <- substring(s, nchar(nm)+1L)
+        used <- c(used, s[!grepl("^_", z) & !grepl("/", z, fixed=TRUE)])
+    }
+    used <- unique(used)
     if (length(used) == 0L)
         stop("'No valid 'feature_path'.")
     ft <- lapply(used, function(nm) {
         .cat("    ", nm)
         v <- rhdf5::h5read(h5_fn, nm)
-        v <- c(v)  # force to regular data type
-        if (length(v) != nrow(mt))
-            stop(sQuote(nm), " should have ", nrow(mt), " values.")
+        if (is.vector(v) || length(dim(v))==1L)
+        {
+            if (length(v) != nrow(mt))
+                stop(sQuote(nm), " should have ", nrow(mt), " values.")
+        } else {
+            stop(sQuote(nm), " should be a vector.")
+        }
         v
     })
     names(ft) <- basename(used)
@@ -600,8 +631,21 @@ scHDF2GDS <- function(h5_fn, outfn, group=c("matrix", "mm10"),
         int32="sp.int32", stop("Invalid 'type': ", type))
     nd <- add.gdsn(outf, "counts", valdim=c(nrow(mt), 0L), compress=compress,
         storage=st)
-    blockApply(mt, function(x) { append.gdsn(nd, x); NULL },
-        grid=colAutoGrid(mt), BPPARAM=NULL)
+    gd <- colAutoGrid(mt)
+    if (verbose)
+    {
+        pb <- txtProgressBar(0L, length(gd), style=3L, width=64L, file=stderr())
+        blockReduce(function(x, v)
+            {
+                append.gdsn(nd, x)
+                setTxtProgressBar(pb, currentBlockId())
+                NULL
+            }, mt, init=NULL, grid=gd, as.sparse=FALSE)
+        close(pb)
+    } else {
+        blockReduce(function(x, v) append.gdsn(nd, x),
+            mt, init=NULL, grid=gd, as.sparse=FALSE)
+    }
     readmode.gdsn(nd)
     if (verbose) { cat("    |"); print(nd) }
 
