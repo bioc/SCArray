@@ -11,6 +11,8 @@ CHANGES IN VERSION 1.8.3
 
     o update `%*%` with SC_GDSMatrix
 
+    o update `rbind()` and `cbind()` with SC_GDSMatrix
+
 
 CHANGES IN VERSION 1.8.0
 -------------------------

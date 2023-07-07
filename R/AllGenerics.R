@@ -123,6 +123,13 @@ setMethod("names<-", SClass, function(x, value) .sc_val(callNextMethod()) )
 # dimnames<-
 setMethod("dimnames<-", SClass, function(x, value) .sc_val(callNextMethod()) )
 
+# rbind, cbind
+setMethod("rbind", SClass, function(...) .sc_val(callNextMethod()) )
+setMethod("cbind", SClass, function(...) .sc_val(callNextMethod()) )
+
+# setMethod("bindROWS", SClass, function(...) .sc_val(callNextMethod()) )
+# setMethod("bindCOLS", SClass, function(...) .sc_val(callNextMethod()) )
+
 
 # Ops
 setMethod("Ops", c(SClass, "vector"),
@@ -568,12 +575,16 @@ x_nperm <- function(x)
 {
     ans <- if (is(x, "DelayedAperm")) 1L else 0L
     if (is(x, "DelayedUnaryOp"))
-        return(ans + x_nperm(x@seed))
+        return((ans + x_nperm(x@seed)) %% 2L)
     if (is(x, "DelayedNaryOp"))
         x <- x@seeds
     if (is.list(x) && !is.array(x))
     {
-        for (y in x) ans <- ans + x_nperm(y)
+        v <- vapply(x, x_nperm, 0L, USE.NAMES=FALSE)
+        if (isTRUE(all(v == v[1L])))
+            ans <- (ans + v[1L]) %% 2L
+        else
+            ans <- NA_integer_
     }
     ans
 }
@@ -581,12 +592,14 @@ x_nperm <- function(x)
 # Return 1 for SCArraySeed, 2L for transposed SCArraySeed, 3L for others
 x_type <- function(x)
 {
-    if (nseed(x)==1L && is(seed(x), "SCArraySeed"))
-    {
-        # whether transposed or not
-        if (x_nperm(x) %% 2L == 0L) 1L else 2L
-    } else
-        3L
+    # seed(s) should be SCArraySeed or in-memory array
+    if (any(!unlist(seedApply(x, function(z)
+            is.array(z) || is(z, "Matrix") || is(z, "SCArraySeed")))))
+        return(3L)
+    # nperm: whether transposed or not
+    v <- x_nperm(x) + 1L
+    if (is.na(v)) v <- 3L
+    v
 }
 
 

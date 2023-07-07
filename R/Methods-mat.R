@@ -17,66 +17,6 @@
     is.matrix(m) || is(m, "Matrix")
 }
 
-.x_as_Matrix <- function(from, to)
-{
-    k <- x_type(from)
-    if (k == 2L)
-    {
-        rv <- blockApply(from, function(x) as(x, to),
-            grid=rowAutoGrid(from), as.sparse=NA, BPPARAM=NULL)
-        do.call(rbind, rv)
-    } else {
-        rv <- blockApply(from, function(x) as(x, to),
-            grid=colAutoGrid(from), as.sparse=NA, BPPARAM=NULL)
-        do.call(cbind, rv)
-    }
-}
-
-x_as_Matrix <- function(from, to)
-{
-    x_check(from, "Calling SCArray:::x_as_Matrix() with %s ...")
-    if (to %in% "Matrix")
-    {
-        to <- ifelse(is_sparse(from), "sparseMatrix", "matrix")
-    }
-    .x_as_Matrix(from, to)
-}
-
-x_as_sparseMatrix <- function(from, to)
-{
-    x_check(from, sprintf(
-        "Calling SCArray:::x_as_sparseMatrix() with %s (to %s) ...", "%s", to))
-    .x_as_Matrix(from, to)
-}
-
-x_as_denseMatrix <- function(from, to)
-{
-    x_check(from, sprintf(
-        "Calling SCArray:::x_as_denseMatrix() with %s (to %s) ...", "%s", to))
-    k <- x_type(from)
-    if (k == 2L)
-    {
-        rv <- blockApply(from, identity,
-            grid=rowAutoGrid(from), as.sparse=NA, BPPARAM=NULL)
-        rv <- do.call(rbind, rv)
-    } else {
-        rv <- blockApply(from, identity,
-            grid=colAutoGrid(from), as.sparse=NA, BPPARAM=NULL)
-        rv <- do.call(cbind, rv)
-    }
-    as(rv, to)
-}
-
-# setAs(SMatrix, "sparseMatrix", x_as_sparseMatrix)
-# setAs(SMatrix, "CsparseMatrix", x_as_sparseMatrix)
-# setAs(SMatrix, "RsparseMatrix", x_as_sparseMatrix)
-# setAs(SMatrix, "TsparseMatrix", x_as_sparseMatrix)
-# setAs(SMatrix, "dgCMatrix", x_as_sparseMatrix)
-# setAs(SMatrix, "dgRMatrix", x_as_sparseMatrix)
-# setAs(SMatrix, "dgTMatrix", x_as_sparseMatrix)
-# setAs(SMatrix, "Matrix", x_as_Matrix)
-# setAs(SMatrix, "denseMatrix", x_as_denseMatrix)
-
 
 
 #######################################################################
