@@ -208,14 +208,18 @@ x_runsvd <- function(x, rank, scale=FALSE, approx=TRUE)
     # to use crossprod
     if (x_verbose())
         .cat("Using cross product for PCA")
+    # call centering and scaling
+    x <- scale(x, center=TRUE, scale=scale)
+    attr(x, "scaled:center") <- NULL
+    attr(x, "scaled:scale") <- NULL
     # fold = 1 for using cross product
     if (approx)
     {
         rv <- BiocSingular::runIrlbaSVD(x, k=rank, nu=rank, nv=rank,
-            center=TRUE, scale=scale, deferred=FALSE, fold=1)
+            center=FALSE, scale=FALSE, deferred=FALSE, fold=1)
     } else {
         rv <- BiocSingular::runExactSVD(x, k=rank, nu=rank, nv=rank,
-            center=TRUE, scale=scale, deferred=FALSE, fold=1)
+            center=FALSE, scale=FALSE, deferred=FALSE, fold=1)
     }
     # output
     out <- list(sdev = rv$d/sqrt(nrow(x) - 1))
