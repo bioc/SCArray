@@ -17,6 +17,11 @@
     is.matrix(m) || is(m, "Matrix")
 }
 
+.is_matrix <- function(m)
+{
+    is.matrix(m) || is(m, "Matrix") || is(m, "DelayedMatrix")
+}
+
 
 
 #######################################################################

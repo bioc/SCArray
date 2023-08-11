@@ -1,7 +1,17 @@
-CHANGES IN VERSION 1.9.1
+CHANGES IN VERSION 1.9.4
 -------------------------
 
     o update for DelayedArray (>= v0.27.2)
+
+
+CHANGES IN VERSION 1.8.4
+-------------------------
+
+    o `rowMeans()`, `rowSums()`, `colMeans()`, `colSums()` with row or column
+      names
+
+    o override S4 functions rowDiffs, colDiffs, rowSdDiffs, colSdDiffs,
+      rowVarDiffs, colVarDiffs, rowLogSumExps, colLogSumExps
 
 
 CHANGES IN VERSION 1.8.3
@@ -12,6 +22,8 @@ CHANGES IN VERSION 1.8.3
     o update `%*%` with SC_GDSMatrix
 
     o update `rbind()` and `cbind()` with SC_GDSMatrix
+
+    o `runPCA()` on SC_GDSMatrix
 
 
 CHANGES IN VERSION 1.8.0

@@ -201,6 +201,24 @@ setMethod("row_nnzero", SMatrix, x_sc_row_nnzero)
 setMethod("col_nnzero", SMatrix, x_sc_col_nnzero)
 
 
+
+#######################################################################
+
+x_runPCA <- function(x, rank=64, center=TRUE, scale=FALSE, get.rotation=TRUE,
+    get.pcs=TRUE, ...)
+{
+    x_check(x, "Calling SCArray:::x_runPCA() with %s ...")
+    # centering and scaling by myself
+    if (isTRUE(center) || isTRUE(scale))
+        x <- x_scale_col(x, center=center, scale=scale, with_attr=FALSE)
+    # output
+    callNextMethod(x=x, rank=rank, center=FALSE, scale=FALSE,
+        get.rotation=get.rotation, get.pcs=get.pcs, ...)
+}
+
+setMethod("runPCA", SMatrix, x_runPCA)
+
+
 #######################################################################
 
 x_runsvd <- function(x, rank, scale=FALSE, approx=TRUE)
@@ -209,17 +227,15 @@ x_runsvd <- function(x, rank, scale=FALSE, approx=TRUE)
     if (x_verbose())
         .cat("Using cross product for PCA")
     # call centering and scaling
-    x <- scale(x, center=TRUE, scale=scale)
-    attr(x, "scaled:center") <- NULL
-    attr(x, "scaled:scale") <- NULL
+    x <- x_scale_col(x, center=TRUE, scale=scale, with_attr=FALSE)
     # fold = 1 for using cross product
     if (approx)
     {
         rv <- BiocSingular::runIrlbaSVD(x, k=rank, nu=rank, nv=rank,
-            center=FALSE, scale=FALSE, deferred=FALSE, fold=1)
+            center=FALSE, scale=scale, deferred=FALSE, fold=1)
     } else {
         rv <- BiocSingular::runExactSVD(x, k=rank, nu=rank, nv=rank,
-            center=FALSE, scale=FALSE, deferred=FALSE, fold=1)
+            center=FALSE, scale=scale, deferred=FALSE, fold=1)
     }
     # output
     out <- list(sdev = rv$d/sqrt(nrow(x) - 1))
@@ -231,17 +247,17 @@ x_runsvd <- function(x, rank, scale=FALSE, approx=TRUE)
 }
 
 
-scRunPCA <- function(x, ncomponents=50, ntop=500, subset_row=NULL, scale=FALSE,
-    altexp=NULL, name="PCA", exprs_values="logcounts", dimred=NULL,
+scRunPCA <- function(sce, ncomponents=50, ntop=500, subset_row=NULL,
+    scale=FALSE, altexp=NULL, name="PCA", exprs_values="logcounts", dimred=NULL,
     n_dimred=NULL, BSPARAM=NULL, BPPARAM=SerialParam(), verbose=TRUE)
 {
     # check
-    stopifnot(is(x, "SingleCellExperiment") || is(x, "SummarizedExperiment"))
+    stopifnot(is(sce, "SingleCellExperiment") || is(sce, "SummarizedExperiment"))
     stopifnot(is.numeric(ncomponents), length(ncomponents)==1L)
 
     # get the working matrix 'mat'
-    y <- x
-    if (!is.null(altexp)) y <- altExp(x, altexp)
+    y <- sce
+    if (!is.null(altexp)) y <- altExp(sce, altexp)
     transposed <- !is.null(dimred)
     if (!is.null(dimred))
     {
@@ -306,7 +322,7 @@ scRunPCA <- function(x, ncomponents=50, ntop=500, subset_row=NULL, scale=FALSE,
     attr(pcs, "rotation") <- pca$rotation
 
     # output
-    reducedDim(x, name) <- pcs
-    x
+    reducedDim(sce, name) <- pcs
+    sce
 }
 
