@@ -166,10 +166,10 @@ setMethod("pmin2", c(SClass, SClass),
 
 
 # scale for each column
-x_scale <- function(x, center=TRUE, scale=TRUE)
+x_scale_col <- function(x, center=TRUE, scale=TRUE, with_attr=TRUE)
 {
     # check
-    x_check(x, "Calling SCArray:::x_scale() with %s ...")
+    x_check(x, "Calling SCArray:::x_scale_col() with %s ...")
     stopifnot(is(x, "SC_GDSMatrix"))
     stopifnot(is.logical(center) || is.numeric(center),
         length(center)==1L || length(center)==ncol(x))
@@ -203,10 +203,18 @@ x_scale <- function(x, center=TRUE, scale=TRUE)
         x <- x * inv
     }
     x <- t(x)
-    if (attr_c) attr(x, "scaled:center") <- center
-    if (attr_s) attr(x, "scaled:scale") <- scale
+    if (isTRUE(with_attr))
+    {
+        if (attr_c) attr(x, "scaled:center") <- center
+        if (attr_s) attr(x, "scaled:scale") <- scale
+    }
     # output
     x
+}
+
+x_scale <- function(x, center=TRUE, scale=TRUE)
+{
+    x_scale_col(x, center=center, scale=scale)
 }
 
 setMethod("scale", SMatrix, x_scale)

@@ -10,6 +10,11 @@
 \alias{colSums2}
 \alias{colSums2,SC_GDSMatrix-method}
 
+\alias{rowLogSumExps}
+\alias{rowLogSumExps,SC_GDSMatrix-method}
+\alias{colLogSumExps}
+\alias{colLogSumExps,SC_GDSMatrix-method}
+
 \alias{rowProds}
 \alias{rowProds,SC_GDSMatrix-method}
 \alias{colProds}
@@ -83,6 +88,26 @@
 \alias{colCollapse}
 \alias{colCollapse,SC_GDSMatrix-method}
 
+\alias{rowDiffs}
+\alias{rowDiffs,SC_GDSMatrix-method}
+\alias{colDiffs}
+\alias{colDiffs,SC_GDSMatrix-method}
+
+\alias{rowSdDiffs}
+\alias{rowSdDiffs,SC_GDSMatrix-method}
+\alias{colSdDiffs}
+\alias{colSdDiffs,SC_GDSMatrix-method}
+
+\alias{rowVarDiffs}
+\alias{rowVarDiffs,SC_GDSMatrix-method}
+\alias{colVarDiffs}
+\alias{colVarDiffs,SC_GDSMatrix-method}
+
+\alias{rowAvgsPerColSet}
+\alias{rowAvgsPerColSet,SC_GDSMatrix-method}
+\alias{colAvgsPerRowSet}
+\alias{colAvgsPerRowSet,SC_GDSMatrix-method}
+
 
 \title{SC_GDSMatrix row/column summarization}
 \description{
@@ -97,8 +122,13 @@ packages.
 \S4method{rowSums2}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=NA)
 \S4method{colSums2}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=NA)
 
-\S4method{rowProds}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=NA)
-\S4method{colProds}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=NA)
+\S4method{rowLogSumExps}{SC_GDSMatrix}(lx, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=NA)
+\S4method{colLogSumExps}{SC_GDSMatrix}(lx, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=NA)
+
+\S4method{rowProds}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE,
+    method=c("direct", "expSumLog"), ..., useNames=NA)
+\S4method{colProds}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE,
+    method=c("direct", "expSumLog"), ..., useNames=NA)
 
 \S4method{rowMeans}{SC_GDSMatrix}(x, na.rm=FALSE, dims=1)
 \S4method{colMeans}{SC_GDSMatrix}(x, na.rm=FALSE, dims=1)
@@ -141,17 +171,40 @@ scColMeanVar(x, na.rm=FALSE, useNames=FALSE, ...)
 
 \S4method{rowCollapse}{SC_GDSMatrix}(x, idxs, rows=NULL, ..., useNames=NA)
 \S4method{colCollapse}{SC_GDSMatrix}(x, idxs, cols=NULL, ..., useNames=NA)
+
+\S4method{rowDiffs}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, lag=1L,
+    differences=1L, ..., useNames=NA)
+\S4method{colDiffs}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, lag=1L,
+    differences=1L, ..., useNames=NA)
+
+\S4method{rowSdDiffs}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE,
+    diff=1L, trim=0, ..., useNames=NA)
+\S4method{colSdDiffs}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE,
+    diff=1L, trim=0, ..., useNames=NA)
+
+\S4method{rowVarDiffs}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE,
+    diff=1L, trim=0, ..., useNames=NA)
+\S4method{colVarDiffs}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE,
+    diff=1L, trim=0, ..., useNames=NA)
+
+\S4method{rowAvgsPerColSet}{SC_GDSMatrix}(X, W=NULL, rows=NULL, S, FUN=rowMeans, ...,
+    na.rm=NA, tFUN=FALSE)
+\S4method{colAvgsPerRowSet}{SC_GDSMatrix}(X, W=NULL, cols=NULL, S, FUN=colMeans, ...,
+    na.rm=NA, tFUN=FALSE)
 }
 
 \arguments{
-    \item{x}{A \link{SC_GDSMatrix} object (inherited from DelayedMatrix)}
+    \item{x, lx, X}{A \link{SC_GDSMatrix} object (inherited from DelayedMatrix)}
     \item{dims}{not used, it should be 1}
     \item{rows, cols}{specify the subset of rows (and/or columns) to operate
         over; if \code{NULL}, no subsetting}
     \item{na.rm}{if \code{TRUE}, missing values (NaN and NA) will be removed}
     \item{w}{\code{NULL} or a numeric vector for weights}
+    \item{W}{\code{NULL} or a matrix for weights}
     \item{center}{\code{NULL}, or a vector of pre-calculated row (column) means}
     \item{useNames}{if \code{TRUE}, the name attributes of result are set}
+    \item{method}{"direct" (by default) or "expSumLog" (calculates the product
+        via the logarithmic transform)}
     \item{group}{a vector for grouping the rows or columns}
     \item{reorder}{if \code{TRUE}, order the resulting matrix as
         \code{sort(unique(group))}; otherwise, it will be in the order that
@@ -159,6 +212,15 @@ scColMeanVar(x, na.rm=FALSE, useNames=FALSE, ...)
     \item{idxs}{An index vector specifying the columns (rows) to be extracted;
         the vector will be reused if the length is less than the number of
         columns or rows}
+    \item{lag}{the lag, an integer}
+    \item{differences, diff}{the order of difference, an integer}
+    \item{trim}{fraction of observations to be trimmed}
+    \item{S}{an integer matrix specifying the subsets, see
+        \link[MatrixGenerics]{rowAvgsPerColSet}}
+    \item{FUN}{summary statistic function, see
+        \link[MatrixGenerics]{rowAvgsPerColSet}}
+    \item{tFUN}{If \code{TRUE}, \code{X} is transposed before it is passed to
+        \code{FUN}, see \link[MatrixGenerics]{rowAvgsPerColSet}}
     \item{...}{additional arguments passed to specific methods: \code{BPPARAM}
         can be specified (if not specified, \code{getAutoBPPARAM()} is used
         instead)}
@@ -180,6 +242,8 @@ the GDS file.
         \item \link[base]{matrix} objects in base R.
         \item \link{getAutoBPPARAM}, \link{BiocParallelParam} for parallel
             processing,
+        \item The \pkg{MatrixGenerics} package for more row/column
+            summarization methods.
     }
 }
 

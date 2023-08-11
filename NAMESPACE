@@ -19,14 +19,18 @@ exportPattern("^sc*")
 exportClasses(SCArrayFileClass, SC_GDSArray, SC_GDSMatrix)
 exportMethods(
     rowSums, colSums, rowSums2, colSums2, rowProds, colProds,
+    rowLogSumExps, colLogSumExps,
     rowMeans, colMeans, rowMeans2, colMeans2,
     rowWeightedMeans, colWeightedMeans,
     rowVars, colVars, rowSds, colSds,
     rowWeightedVars, colWeightedVars, rowWeightedSds, colWeightedSds,
     rowMins, colMins, rowMaxs, colMaxs, rowRanges, colRanges,
     rowAnyNAs, colAnyNAs, rowCollapse, colCollapse,
+    rowDiffs, colDiffs, rowSdDiffs, colSdDiffs, rowVarDiffs, colVarDiffs,
+    rowAvgsPerColSet, colAvgsPerRowSet,
     row_nnzero, col_nnzero,
-    colsum, rowsum, scale, pmin2, pmax2
+    colsum, rowsum, scale, pmin2, pmax2,
+    runPCA
 )
 
 

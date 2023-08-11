@@ -20,19 +20,23 @@
 
 ################
 
-.x_row_sums <- function(x, na.rm, BPPARAM=getAutoBPPARAM())
+.x_row_sums <- function(x, na.rm, useNames=TRUE, BPPARAM=getAutoBPPARAM())
 {
-    .parallel_col_reduce(x, BPPARAM,
+    rv <- .parallel_col_reduce(x, BPPARAM,
         Fun = function(bk, v, na.rm) .Call(c_rowSums, bk, v, na.rm),
         InitFun = .double_nrow,
         ReduceFun=`+`, na.rm=na.rm)
+    if (isTRUE(useNames)) names(rv) <- rownames(x)
+    rv
 }
 
-.x_col_sums <- function(x, na.rm, BPPARAM=getAutoBPPARAM())
+.x_col_sums <- function(x, na.rm, useNames=TRUE, BPPARAM=getAutoBPPARAM())
 {
-    .parallel_col_apply(x, BPPARAM,
+    rv <- .parallel_col_apply(x, BPPARAM,
         Fun = function(bk, na.rm) .Call(c_colSums, bk, na.rm),
         na.rm=na.rm)
+    if (isTRUE(useNames)) names(rv) <- colnames(x)
+    rv
 }
 
 x_rowSums <- function(x, na.rm=FALSE, dims=1)
@@ -76,11 +80,9 @@ x_rowSums2 <- function(x, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=NA)
     {
         x <- x_subset(x, rows, cols)
         if (k == 1L)
-            v <- .x_row_sums(x, na.rm, ...)
+            .x_row_sums(x, na.rm, useNames, ...)
         else
-            v <- .x_col_sums(t(x), na.rm, ...)
-        if (isTRUE(useNames)) names(v) <- rownames(x)
-        v  # output
+            .x_col_sums(t(x), na.rm, useNames, ...)
     } else {
         x_msg("Calling DelayedMatrixStats::rowSums2() ...")
         callNextMethod()
@@ -96,11 +98,9 @@ x_colSums2 <- function(x, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=NA)
     {
         x <- x_subset(x, rows, cols)
         if (k == 1L)
-            v <- .x_col_sums(x, na.rm, ...)
+            .x_col_sums(x, na.rm, useNames, ...)
         else
-            v <- .x_row_sums(t(x), na.rm, ...)
-        if (isTRUE(useNames)) names(v) <- rownames(x)
-        v  # output
+            .x_row_sums(t(x), na.rm, useNames, ...)
     } else {
         x_msg("Calling DelayedMatrixStats::colSums2() ...")
         callNextMethod()
@@ -111,6 +111,28 @@ setMethod("rowSums", SMatrix, x_rowSums)
 setMethod("colSums", SMatrix, x_colSums)
 setMethod("rowSums2", SMatrix, x_rowSums2)
 setMethod("colSums2", SMatrix, x_colSums2)
+
+
+################
+
+x_rowLogSumExps <- function(lx, rows=NULL, cols=NULL, na.rm=FALSE, ...,
+    useNames=NA)
+{
+    x_check(lx, "Calling SCArray:::x_rowLogSumExps() with %s ...")
+    log(x_rowSums2(exp(lx), rows=rows, cols=cols, na.rm=na.rm, ...,
+        useNames=useNames))
+}
+
+x_colLogSumExps <- function(lx, rows=NULL, cols=NULL, na.rm=FALSE, ...,
+    useNames=NA)
+{
+    x_check(lx, "Calling SCArray:::x_colLogSumExps() with %s ...")
+    log(x_colSums2(exp(lx), rows=rows, cols=cols, na.rm=na.rm, ...,
+        useNames=useNames))
+}
+
+setMethod("rowLogSumExps", SMatrix, x_rowLogSumExps)
+setMethod("colLogSumExps", SMatrix, x_colLogSumExps)
 
 
 ################
@@ -212,36 +234,68 @@ setMethod("colsum", SMatrix, x_colsum_grp)
         as.sparse=FALSE, na.rm=na.rm)
 }
 
-x_rowProds <- function(x, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=NA)
+x_rowProds <- function(x, rows=NULL, cols=NULL, na.rm=FALSE,
+    method=c("direct", "expSumLog"), ..., useNames=NA)
 {
     x_check(x, "Calling SCArray:::x_rowProds() with %s ...")
     stopifnot(is.logical(na.rm), length(na.rm)==1L)
-    if (x_type(x) == 1L)
+    method <- match.arg(method)
+    if (method == "direct")
     {
-        x <- x_subset(x, rows, cols)
-        v <- .x_row_prods(x, na.rm, ...)
-        if (isTRUE(useNames)) names(v) <- rownames(x)
-        v  # output
+        if (x_type(x) == 1L)
+        {
+            x <- x_subset(x, rows, cols)
+            v <- .x_row_prods(x, na.rm, ...)
+            if (isTRUE(useNames)) names(v) <- rownames(x)
+            v  # output
+        } else {
+            x_msg("Calling DelayedMatrixStats::rowProds() ...")
+            callNextMethod()
+        }
     } else {
-        x_msg("Calling DelayedMatrixStats::rowProds() ...")
-        callNextMethod()
+        x <- x_subset(x, rows, cols)
+        nz <- rowSums(x==0L, na.rm=na.rm)
+        nl <- rowSums(x<0L,  na.rm=na.rm)
+        v <- exp(rowSums(log(abs(x)), na.rm=na.rm))
+        i <- which(nl %% 2L == 1L)
+        if (length(i)) v[i] <- -v[i]
+        i <- which(nz > 0L)
+        if (length(i)) v[i] <- 0
+        if (isTRUE(useNames)) names(v) <- rownames(x)
+        v
     }
 }
 
-x_colProds <- function(x, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=NA)
+x_colProds <- function(x, rows=NULL, cols=NULL, na.rm=FALSE,
+    method=c("direct", "expSumLog"), ..., useNames=NA)
 {
     x_check(x, "Calling SCArray:::x_colProds() with %s ...")
     stopifnot(is.logical(na.rm), length(na.rm)==1L)
-    if (x_type(x) != 2L)
+    method <- match.arg(method)
+    if (method == "direct")
     {
-        x_msg("Calling DelayedMatrixStats::colProds() ...")
-        callNextMethod()
+        if (x_type(x) != 2L)
+        {
+            x_msg("Calling DelayedMatrixStats::colProds() ...")
+            callNextMethod()
+        } else {
+            x_msg("Calling DelayedArray::.x_row_prods() ...")
+            x <- x_subset(x, rows, cols)
+            v <- .x_row_prods(t(x), na.rm, ...)
+            if (isTRUE(useNames)) names(v) <- colnames(x)
+            v  # output
+        }
     } else {
-        x_msg("Calling DelayedArray::.x_row_prods() ...")
         x <- x_subset(x, rows, cols)
-        v <- .x_row_prods(t(x), na.rm, ...)
+        nz <- colSums(x==0L, na.rm=na.rm)
+        nl <- colSums(x<0L,  na.rm=na.rm)
+        v <- exp(colSums(log(abs(x)), na.rm=na.rm))
+        i <- which(nl %% 2L == 1L)
+        if (length(i)) v[i] <- -v[i]
+        i <- which(nz > 0L)
+        if (length(i)) v[i] <- 0
         if (isTRUE(useNames)) names(v) <- colnames(x)
-        v  # output
+        v
     }
 }
 
@@ -251,21 +305,25 @@ setMethod("colProds", SMatrix, x_colProds)
 
 ################
 
-.x_row_means <- function(x, na.rm, BPPARAM=getAutoBPPARAM())
+.x_row_means <- function(x, na.rm, useNames=TRUE, BPPARAM=getAutoBPPARAM())
 {
     rv <- .parallel_col_reduce(x, BPPARAM,
         Fun = function(bk, v, na.rm) .Call(c_rowMeans, bk, v, na.rm),
         InitFun = .double_nrow2,
         ReduceFun=`+`, na.rm=na.rm)
     # finally
-    .Call(c_rowMeans_final, rv)
+    rv <- .Call(c_rowMeans_final, rv)
+    if (isTRUE(useNames)) names(rv) <- rownames(x)
+    rv
 }
 
-.x_col_means <- function(x, na.rm, BPPARAM=getAutoBPPARAM())
+.x_col_means <- function(x, na.rm, useNames=TRUE, BPPARAM=getAutoBPPARAM())
 {
-    .parallel_col_apply(x, BPPARAM,
+    rv <- .parallel_col_apply(x, BPPARAM,
         Fun = function(bk, na.rm) .Call(c_colMeans, bk, na.rm),
         na.rm=na.rm)
+    if (isTRUE(useNames)) names(rv) <- colnames(x)
+    rv
 }
 
 x_rowMeans <- function(x, na.rm=FALSE, dims=1)
@@ -308,11 +366,9 @@ x_rowMeans2 <- function(x, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=NA)
     {
         x <- x_subset(x, rows, cols)
         if (k == 1L)
-            v <- .x_row_means(x, na.rm, ...)
+            .x_row_means(x, na.rm, useNames, ...)
         else
-            v <- .x_col_means(t(x), na.rm, ...)
-        if (isTRUE(useNames)) names(v) <- rownames(x)
-        v
+            .x_col_means(t(x), na.rm, useNames, ...)
     } else {
         x_msg("Calling DelayedMatrixStats::rowMeans2() ...")
         callNextMethod()
@@ -328,11 +384,9 @@ x_colMeans2 <- function(x, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=NA)
     {
         x <- x_subset(x, rows, cols)
         if (k == 1L)
-            v <- .x_col_means(x, na.rm, ...)
+            .x_col_means(x, na.rm, useNames, ...)
         else
-            v <- .x_row_means(t(x), na.rm, ...)
-        if (isTRUE(useNames)) names(v) <- colnames(x)
-        v
+            .x_row_means(t(x), na.rm, useNames, ...)
     } else {
         x_msg("Calling DelayedMatrixStats::colMeans2() ...")
         callNextMethod()
@@ -987,5 +1041,220 @@ setMethod("rowCollapse", SMatrix, x_rowCollapse)
 setMethod("colCollapse", SMatrix, x_colCollapse)
 
 
+################
 
+x_rowDiffs <- function(x, rows=NULL, cols=NULL, lag=1L, differences=1L, ...,
+    useNames=NA)
+{
+    x_check(x, "Calling SCArray:::x_rowDiffs() with %s ...")
+    # check
+    stopifnot(is.numeric(lag), length(lag)==1L)
+    stopifnot(is.numeric(differences), length(differences)==1L)
+    lag <- as.integer(lag)
+    if (anyNA(lag) || lag<1L)
+        stop("'lag' must be a positive integer.")
+    differences <- as.integer(differences)
+    if (anyNA(differences) || differences<1L)
+        stop("'differences' must be a positive integer.")
+    # subset
+    x <- x_subset(x, rows, cols)
+    if (lag >= ncol(x)) stop("'lag' should be less than ncol(x).")
+    nm_r <- rownames(x)
+    nm_c <- colnames(x)
+    if (!is.null(nm_r)) rownames(x) <- NULL
+    if (!is.null(nm_c)) colnames(x) <- NULL
+    # diff
+    ndiff <- differences
+    while (ndiff > 0L)
+    {
+        if (ncol(x) <= lag)
+            stop("'differences' is too large.")
+        i <- seq.int(1L, ncol(x)-lag)
+        x <- x[, i+lag, drop=FALSE] - x[, i, drop=FALSE]
+        ndiff <- ndiff - 1L
+    }
+    # row & column names
+    if (isTRUE(useNames))
+    {
+        if (!is.null(nm_r)) rownames(x) <- nm_r
+        if (!is.null(nm_c))
+        {
+            while (differences > 0L)
+            {
+                nm_c <- nm_c[seq.int(1L+lag, length(nm_c))]
+                differences <- differences - 1L
+            }
+            colnames(x) <- nm_c
+        }
+    }
+    # output
+    x
+}
+
+x_colDiffs <- function(x, rows=NULL, cols=NULL, lag=1L, differences=1L, ...,
+    useNames=NA)
+{
+    x_check(x, "Calling SCArray:::x_colDiffs() with %s ...")
+    # check
+    stopifnot(is.numeric(lag), length(lag)==1L)
+    stopifnot(is.numeric(differences), length(differences)==1L)
+    lag <- as.integer(lag)
+    if (anyNA(lag) || lag<1L)
+        stop("'lag' must be a positive integer.")
+    differences <- as.integer(differences)
+    if (anyNA(differences) || differences<1L)
+        stop("'differences' must be a positive integer.")
+    # subset
+    x <- x_subset(x, rows, cols)
+    if (lag >= nrow(x)) stop("'lag' should be less than nrow(x).")
+    nm_r <- rownames(x)
+    nm_c <- colnames(x)
+    if (!is.null(nm_r)) rownames(x) <- NULL
+    if (!is.null(nm_c)) colnames(x) <- NULL
+    # diff
+    ndiff <- differences
+    while (ndiff > 0L)
+    {
+        if (nrow(x) <= lag)
+            stop("'differences' is too large.")
+        i <- seq.int(1L, nrow(x)-lag)
+        x <- x[i+lag, , drop=FALSE] - x[i, , drop=FALSE]
+        ndiff <- ndiff - 1L
+    }
+    # row & column names
+    if (isTRUE(useNames))
+    {
+        if (!is.null(nm_c)) colnames(x) <- nm_c
+        if (!is.null(nm_r))
+        {
+            while (differences > 0L)
+            {
+                nm_r <- nm_r[seq.int(1L+lag, length(nm_r))]
+                differences <- differences - 1L
+            }
+            rownames(x) <- nm_r
+        }
+    }
+    # output
+    x
+}
+
+setMethod("rowDiffs", SMatrix, x_rowDiffs)
+setMethod("colDiffs", SMatrix, x_colDiffs)
+
+
+################
+
+# Disable is_sparse,
+#   since "NOT IMPLEMENTED YET!" in extract_sparse_array() in DelayedArray
+#   will be removed when implemented!
+setMethod("is_sparse", "DelayedNaryIsoOp", function(x) FALSE)
+
+
+x_rowSdDiffs <- function(x, rows=NULL, cols=NULL, na.rm=FALSE, diff=1L,
+    trim=0, ..., useNames=NA)
+{
+    stopifnot(is.numeric(trim), length(trim)==1L, 0<=trim, trim<=0.5)
+    x <- rowDiffs(x, rows=rows, cols=cols, differences=diff, useNames=useNames)
+    if (trim != 0) warning("'trim' is ignored.", immediate.=TRUE)
+    rowSds(x, na.rm=na.rm, useNames=useNames)
+}
+
+x_colSdDiffs <- function(x, rows=NULL, cols=NULL, na.rm=FALSE, diff=1L,
+    trim=0, ..., useNames=NA)
+{
+    stopifnot(is.numeric(trim), length(trim)==1L, 0<=trim, trim<=0.5)
+    x <- colDiffs(x, rows=rows, cols=cols, differences=diff, useNames=useNames)
+    if (trim != 0) warning("'trim' is ignored.", immediate.=TRUE)
+    colSds(x, na.rm=na.rm, useNames=useNames)
+}
+
+x_rowVarDiffs <- function(x, rows=NULL, cols=NULL, na.rm=FALSE, diff=1L,
+    trim=0, ..., useNames=NA)
+{
+    stopifnot(is.numeric(trim), length(trim)==1L, 0<=trim, trim<=0.5)
+    x <- rowDiffs(x, rows=rows, cols=cols, differences=diff, useNames=useNames)
+    if (trim != 0) warning("'trim' is ignored.", immediate.=TRUE)
+    rowVars(x, na.rm=na.rm, useNames=useNames)
+}
+
+x_colVarDiffs <- function(x, rows=NULL, cols=NULL, na.rm=FALSE, diff=1L,
+    trim=0, ..., useNames=NA)
+{
+    stopifnot(is.numeric(trim), length(trim)==1L, 0<=trim, trim<=0.5)
+    x <- colDiffs(x, rows=rows, cols=cols, differences=diff, useNames=useNames)
+    if (trim != 0) warning("'trim' is ignored.", immediate.=TRUE)
+    colVars(x, na.rm=na.rm, useNames=useNames)
+}
+
+setMethod("rowSdDiffs", SMatrix, x_rowSdDiffs)
+setMethod("colSdDiffs", SMatrix, x_colSdDiffs)
+setMethod("rowVarDiffs", SMatrix, x_rowVarDiffs)
+setMethod("colVarDiffs", SMatrix, x_colVarDiffs)
+
+
+################
+
+x_rowAvgsPerColSet <- function(X, W=NULL, rows=NULL, S, FUN=rowMeans, ...,
+    na.rm=NA, tFUN=FALSE)
+{
+    # check
+    stopifnot(is.matrix(S))
+    if (.is_matrix(W))
+    {
+        if (!identical(dim(X), dim(W)))
+            stop("'W' should have the same dimensions as 'X'.")
+        X <- X * W
+    } else if (!is.null(W))
+        stop("'W' should be NULL, or a matrix-like object.")
+    FUN <- match.fun(FUN)
+    stopifnot(is.logical(tFUN), length(tFUN)==1L, !is.na(tFUN))
+    # subset
+    if (!is.null(rows)) X <- x_subset(X, rows, NULL)
+    # for-loop
+    rv <- lapply(seq_len(ncol(S)), FUN=function(i, ...)
+        {
+            x <- X[, S[,i], drop=FALSE]
+            if (tFUN) x <- t(x)
+            FUN(x, na.rm=na.rm, ...)
+        }, ...)
+    rv <- do.call(cbind, rv)
+    if (!is.null(colnames(S)) && NCOL(rv)==ncol(S))
+        colnames(rv) <- colnames(S)
+    # output
+    rv
+}
+
+x_colAvgsPerRowSet <- function(X, W=NULL, cols=NULL, S, FUN=colMeans, ...,
+    na.rm=NA, tFUN=FALSE)
+{
+    # check
+    stopifnot(is.matrix(S))
+    if (.is_matrix(W))
+    {
+        if (!identical(dim(X), dim(W)))
+            stop("'W' should have the same dimensions as 'X'.")
+        X <- X * W
+    } else if (!is.null(W))
+        stop("'W' should be NULL, or a matrix-like object.")
+    FUN <- match.fun(FUN)
+    stopifnot(is.logical(tFUN), length(tFUN)==1L, !is.na(tFUN))
+    # subset
+    if (!is.null(cols)) X <- x_subset(X, NULL, cols)
+    # for-loop
+    rv <- lapply(seq_len(ncol(S)), FUN=function(i, ...)
+        {
+            x <- X[S[,i], , drop=FALSE]
+            if (tFUN) x <- t(x)
+            FUN(x, na.rm=na.rm, ...)
+        }, ...)
+    rv <- do.call(rbind, rv)
+    if (!is.null(colnames(S)) && NROW(rv)==ncol(S))
+        rownames(rv) <- colnames(S)
+    # output
+    rv
+}
+
+setMethod("rowAvgsPerColSet", SMatrix, x_rowAvgsPerColSet)
+setMethod("colAvgsPerRowSet", SMatrix, x_colAvgsPerRowSet)
 
