@@ -1,4 +1,4 @@
-CHANGES IN VERSION 1.9.4
+CHANGES IN VERSION 1.10.0
 -------------------------
 
     o update for DelayedArray (>= v0.27.2)
@@ -10,8 +10,8 @@ CHANGES IN VERSION 1.8.4
     o `rowMeans()`, `rowSums()`, `colMeans()`, `colSums()` with row or column
       names
 
-    o override S4 functions rowDiffs, colDiffs, rowSdDiffs, colSdDiffs,
-      rowVarDiffs, colVarDiffs, rowLogSumExps, colLogSumExps
+    o override S4 functions rowDiffs(), colDiffs(), rowSdDiffs(), colSdDiffs(),
+      rowVarDiffs(), colVarDiffs(), rowLogSumExps(), colLogSumExps()
 
 
 CHANGES IN VERSION 1.8.3
@@ -33,7 +33,7 @@ CHANGES IN VERSION 1.8.0
 
     o update the vignettes
 
-    o override S4 functions colsum, rowsum, scale, pmin2, pmax2 for
+    o override S4 functions colsum(), rowsum(), scale(), pmin2(), pmax2() for
       SC_GDSMatrix
 
     o new S4 generic functions `row_nnzero()`, `col_nnzero()`, `scGetFiles()`,
@@ -43,12 +43,13 @@ CHANGES IN VERSION 1.8.0
       `scReplaceNA()`
 
     o update S4 functions `[`, `[[`, `names<-`, `dimnames<-`, aperm, Ops, Math,
-      crossprod, tcrossprod for SC_GDSArray
+      crossprod(), tcrossprod() for SC_GDSArray
 
-    o override S4 functions rowSums, colSums, rowSums2, colSums2, rowProds,
-      colProds, rowMeans, colMeans, rowMeans2, colMeans2, rowVars, colVars,
-      rowSds, colSds, rowMins, colMins, rowMaxs, colMaxs, rowRanges, colRanges,
-      rowAnyNAs, colAnyNAs, rowCollapse, colCollapse for SC_GDSMatrix
+    o override S4 functions rowSums(), colSums(), rowSums2(), colSums2(),
+      rowProds(), colProds(), rowMeans(), colMeans(), rowMeans2(), colMeans2(),
+      rowVars(), colVars(), rowSds(), colSds(), rowMins(), colMins(), rowMaxs(),
+      colMaxs(), rowRanges(), colRanges(), rowAnyNAs(), colAnyNAs(),
+      rowCollapse(), colCollapse() for SC_GDSMatrix
 
 
 CHANGES IN VERSION 1.4.0
