@@ -35,15 +35,15 @@ SparseMatrix::SparseMatrix(SEXP mat)
 		"SparseArraySeed should be a numeric matrix.";
 	// slot nzindex
 	SEXP ii = GET_SLOT(mat, mkString("nzindex"));
-	if (!Rf_isMatrix(ii)) Rf_error(err_type);
+	if (!Rf_isMatrix(ii)) Rf_error("%s", err_type);
 	nnzero = INTEGER(GET_DIM(ii))[0];
 	nzi_r = INTEGER(ii); nzi_c = nzi_r + nnzero;
 	// slot nzdata
 	nzdata = GET_SLOT(mat, mkString("nzdata"));
 	if (TYPEOF(nzdata)!=REALSXP && !is_int(nzdata))
-		Rf_error(err_type);
+		Rf_error("%s", err_type);
 	if (Rf_length(nzdata) != nnzero)
-		Rf_error(err_type);
+		Rf_error("%s", err_type);
 }
 
 
@@ -77,7 +77,8 @@ void get_mat_size(SEXP mat, int &nrow, int &ncol)
 	} else if (is_sparse_seed(mat))
 	{
 		SEXP dm = GET_SLOT(mat, mkString("dim"));
-		if (Rf_isNull(dm) || Rf_length(dm) != 2) Rf_error(err);
+		if (Rf_isNull(dm) || Rf_length(dm) != 2)
+			Rf_error("%s", err);
 		int *p = INTEGER(dm);
 		nrow = p[0]; ncol = p[1];
 	} else
@@ -113,12 +114,14 @@ SEXP c_add(SEXP a, SEXP b)
 	const size_t n = Rf_xlength(a);
 	if (TYPEOF(b) == REALSXP)
 	{
-		if (Rf_xlength(a) != Rf_xlength(b)) Rf_error(err_len);
+		if (Rf_xlength(a) != Rf_xlength(b))
+			Rf_error("%s", err_len);
 		const double *s = REAL(b);
 		for (size_t i=0; i < n; i++) p[i] += s[i];
 	} else if (is_int(b))
 	{
-		if (Rf_xlength(a) != Rf_xlength(b)) Rf_error(err_len);
+		if (Rf_xlength(a) != Rf_xlength(b))
+			Rf_error("%s", err_len);
 		const int *s = INTEGER(b);
 		for (size_t i=0; i < n; i++)
 			if (s[i] != NA_INTEGER) p[i] += s[i]; else p[i] = NA_REAL;

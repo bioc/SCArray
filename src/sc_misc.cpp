@@ -1,7 +1,7 @@
 // ===============================================================
 //
 // SCArray R package
-// Copyright (C) 2023    Xiuwen Zheng
+// Copyright (C) 2023-2024    Xiuwen Zheng
 // All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -17,9 +17,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "sc_main.h"
 #include <cstdint>
 #include <vector>
+#include "sc_main.h"
 
 
 extern "C"
