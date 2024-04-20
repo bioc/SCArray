@@ -2,7 +2,7 @@
 \alias{SCArray-package}
 \alias{SCArray}
 \docType{package}
-\title{Large-scale single-cell RNA-seq data manipulation with GDS files}
+\title{Large-scale single-cell omics data manipulation with GDS files}
 \description{
     The package combines dense/sparse matrices stored in GDS files and the
 Bioconductor infrastructure framework to provide out-of-memory data storage

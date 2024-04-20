@@ -1,4 +1,4 @@
-Large-scale single-cell RNA-seq data manipulation using GDS files
+Large-scale single-cell omics data manipulation using GDS files
 ====
 
 ![GPLv3](http://www.gnu.org/graphics/gplv3-88x31.png)
@@ -7,12 +7,12 @@ Large-scale single-cell RNA-seq data manipulation using GDS files
 
 ## Features
 
-Large-scale single-cell RNA-seq data manipulation and statistical analysis with scalable implementation of generalized mixed models and principal component analysis. The package integrates the sparse matrix in Genomic Data Structure (GDS) files and the Bioconductor infrastructure framework to provide out-of-memory data storage and manipulation using the R programming language.
+SCArray provides large-scale single-cell omics data manipulation using Genomic Data Structure (GDS) files. It combines dense and sparse matrices stored in GDS files and the Bioconductor infrastructure framework (SingleCellExperiment and DelayedArray) to provide out-of-memory data storage and large-scale manipulation using the R programming language.
 
 
-## Bioconductor:
+## Bioconductor
 
-v1.8.4 ([http://bioconductor.org/packages/SCArray/](http://bioconductor.org/packages/SCArray/))
+v1.12.0 ([http://bioconductor.org/packages/SCArray/](http://bioconductor.org/packages/SCArray/))
 
 Package News: [NEWS](./NEWS)
 
@@ -73,7 +73,7 @@ counts(sce)
 ```
 
 
-## Optimized Implementation of GDS-based DelayedMatrix
+## Optimized implementation of GDS-based DelayedMatrix
 
 - ✓ = Implemented in **SCArray** for `SC_GDSMatrix`
 - ⦿ = Implemented in [**DelayedMatrixStats**](http://bioconductor.org/packages/DelayedMatrixStats/) or [**MatrixGenerics**](http://bioconductor.org/packages/MatrixGenerics/)

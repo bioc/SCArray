@@ -1,5 +1,5 @@
 ---
-title: "Large-scale single-cell RNA-seq data manipulation with GDS files"
+title: "Large-scale single-cell omics data manipulation with GDS files"
 author: "Dr. Xiuwen Zheng (Genomics Research Center, AbbVie)"
 date: "Jan 2023"
 output:
@@ -24,7 +24,7 @@ options(width=110)
 
 ## Introduction
 
-The SCArray package provides large-scale single-cell RNA-seq data manipulation
+The SCArray package provides large-scale single-cell omics data manipulation
 using Genomic Data Structure
 ([GDS](http://www.bioconductor.org/packages/gdsfmt)) files. It combines
 dense/sparse matrices stored in GDS files and the Bioconductor infrastructure

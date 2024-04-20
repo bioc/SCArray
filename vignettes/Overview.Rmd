@@ -1,5 +1,5 @@
 ---
-title: "SCArray -- Large-scale single-cell RNA-seq data manipulation with GDS files"
+title: "SCArray -- Large-scale single-cell omics data manipulation with GDS files"
 author:
     - Dr. Xiuwen Zheng
     - Genomics Research Center, AbbVie

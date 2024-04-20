@@ -2,7 +2,7 @@
 \alias{scArray}
 \title{Get an DelayedArray instance}
 \description{
-    Gets an DelayedArray instance from a single-cell GDS file.
+    Gets an DelayedArray instance from a single-cell omics GDS file.
 }
 \usage{
 scArray(gdsfile, varname)
