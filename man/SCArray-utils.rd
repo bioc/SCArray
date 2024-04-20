@@ -24,7 +24,13 @@
 \alias{\%*\%,SC_GDSMatrix,ANY-method}
 \alias{\%*\%,ANY,SC_GDSMatrix-method}
 \alias{crossprod}
+\alias{crossprod,ANY,SC_GDSMatrix-method}
+\alias{crossprod,SC_GDSMatrix,ANY-method}
+\alias{crossprod,SC_GDSMatrix,missing-method}
 \alias{tcrossprod}
+\alias{tcrossprod,ANY,SC_GDSMatrix-method}
+\alias{tcrossprod,SC_GDSMatrix,ANY-method}
+\alias{tcrossprod,SC_GDSMatrix,missing-method}
 
 \alias{scale}
 \alias{scale,SC_GDSMatrix-method}

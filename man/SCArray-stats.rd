@@ -236,7 +236,7 @@ the GDS file.
     \itemize{
         \item The \pkg{DelayedMatrixStats} package for more row/column
             summarization methods for \link{DelayedMatrix} objects.
-        \item \link{DelayedMatrix-utils} for other common operations on
+        \item \link{DelayedArray-utils} for other common operations on
             \link{DelayedMatrix} objects.
         \item \link{DelayedMatrix} objects.
         \item \link[base]{matrix} objects in base R.
