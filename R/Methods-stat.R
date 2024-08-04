@@ -23,7 +23,13 @@
 .x_row_sums <- function(x, na.rm, useNames=TRUE, BPPARAM=getAutoBPPARAM())
 {
     rv <- .parallel_col_reduce(x, BPPARAM,
-        Fun = function(bk, v, na.rm) .Call(c_rowSums, bk, v, na.rm),
+        Fun = function(bk, v, na.rm)
+        {
+            # C++ code doesn't handle SVT_SparseArray objects
+            if (is(bk, "SVT_SparseArray"))
+                bk <- as(bk, "COO_SparseArray")
+            .Call(c_rowSums, bk, v, na.rm)
+        },
         InitFun = .double_nrow,
         ReduceFun=`+`, na.rm=na.rm)
     if (isTRUE(useNames)) names(rv) <- rownames(x)
@@ -33,7 +39,13 @@
 .x_col_sums <- function(x, na.rm, useNames=TRUE, BPPARAM=getAutoBPPARAM())
 {
     rv <- .parallel_col_apply(x, BPPARAM,
-        Fun = function(bk, na.rm) .Call(c_colSums, bk, na.rm),
+        Fun = function(bk, na.rm)
+        {
+            # C++ code doesn't handle SVT_SparseArray objects
+            if (is(bk, "SVT_SparseArray"))
+                bk <- as(bk, "COO_SparseArray")
+            .Call(c_colSums, bk, na.rm)
+        },
         na.rm=na.rm)
     if (isTRUE(useNames)) names(rv) <- colnames(x)
     rv
@@ -143,7 +155,12 @@ setMethod("colLogSumExps", SMatrix, x_colLogSumExps)
     # block read
     lst <- .parallel_col_apply(x, BPPARAM,
         Fun = function(bk, ii, n_grp, na.rm)
-            .Call(c_row_sum_grp, bk, ii, n_grp, na.rm),
+        {
+            # C++ code doesn't handle SVT_SparseArray objects
+            if (is(bk, "SVT_SparseArray"))
+                bk <- as(bk, "COO_SparseArray")
+            .Call(c_row_sum_grp, bk, ii, n_grp, na.rm)
+        },
         .flatten=FALSE, ii=ii, n_grp=n_grp, na.rm=na.rm)
     # merge
     do.call(cbind, lst)
@@ -156,6 +173,9 @@ setMethod("colLogSumExps", SMatrix, x_colLogSumExps)
     blockReduce(function(bk, v, ii, n_grp, na.rm)
     {
         st <- start(currentViewport())
+        # C++ code doesn't handle SVT_SparseArray objects
+        if (is(bk, "SVT_SparseArray"))
+            bk <- as(bk, "COO_SparseArray")
         .Call(c_col_sum_grp, bk, v, ii, st, n_grp, na.rm)
     }, x, matrix(0, nrow(x), n_grp), grid=colAutoGrid(x), as.sparse=NA,
         ii=ii, n_grp=n_grp, na.rm=na.rm)
@@ -222,7 +242,13 @@ setMethod("colsum", SMatrix, x_colsum_grp)
 .x_row_prods <- function(x, na.rm, BPPARAM=getAutoBPPARAM())
 {
     .parallel_col_reduce(x, BPPARAM,
-        Fun = function(bk, v, na.rm) .Call(c_rowProds, bk, v, na.rm),
+        Fun = function(bk, v, na.rm)
+        {
+            # C++ code doesn't handle SVT_SparseArray objects
+            if (is(bk, "SVT_SparseArray"))
+                bk <- as(bk, "COO_SparseArray")
+            .Call(c_rowProds, bk, v, na.rm)
+        },
         InitFun = function(x, ...) rep(1, nrow(x)),
         ReduceFun=`*`, as.sparse=FALSE, na.rm=na.rm)
 }
@@ -230,7 +256,13 @@ setMethod("colsum", SMatrix, x_colsum_grp)
 .x_col_prods <- function(x, na.rm, BPPARAM=getAutoBPPARAM())
 {
     .parallel_col_apply(x, BPPARAM,
-        Fun = function(bk, na.rm) .Call(c_colProds, bk, na.rm),
+        Fun = function(bk, na.rm)
+        {
+            # C++ code doesn't handle SVT_SparseArray objects
+            if (is(bk, "SVT_SparseArray"))
+                bk <- as(bk, "COO_SparseArray")
+            .Call(c_colProds, bk, na.rm)
+        },
         as.sparse=FALSE, na.rm=na.rm)
 }
 
@@ -308,7 +340,13 @@ setMethod("colProds", SMatrix, x_colProds)
 .x_row_means <- function(x, na.rm, useNames=TRUE, BPPARAM=getAutoBPPARAM())
 {
     rv <- .parallel_col_reduce(x, BPPARAM,
-        Fun = function(bk, v, na.rm) .Call(c_rowMeans, bk, v, na.rm),
+        Fun = function(bk, v, na.rm)
+        {
+            # C++ code doesn't handle SVT_SparseArray objects
+            if (is(bk, "SVT_SparseArray"))
+                bk <- as(bk, "COO_SparseArray")
+            .Call(c_rowMeans, bk, v, na.rm)
+        },
         InitFun = .double_nrow2,
         ReduceFun=`+`, na.rm=na.rm)
     # finally
@@ -320,7 +358,13 @@ setMethod("colProds", SMatrix, x_colProds)
 .x_col_means <- function(x, na.rm, useNames=TRUE, BPPARAM=getAutoBPPARAM())
 {
     rv <- .parallel_col_apply(x, BPPARAM,
-        Fun = function(bk, na.rm) .Call(c_colMeans, bk, na.rm),
+        Fun = function(bk, na.rm)
+        {
+            # C++ code doesn't handle SVT_SparseArray objects
+            if (is(bk, "SVT_SparseArray"))
+                bk <- as(bk, "COO_SparseArray")
+            .Call(c_colMeans, bk, na.rm)
+        },
         na.rm=na.rm)
     if (isTRUE(useNames)) names(rv) <- colnames(x)
     rv
@@ -410,6 +454,9 @@ setMethod("colMeans2", SMatrix, x_colMeans2)
     rv <- .parallel_col_reduce2(x, BPPARAM,
         Fun = function(bk, v, split, w, na.rm)
         {
+            # C++ code doesn't handle SVT_SparseArray objects
+            if (is(bk, "SVT_SparseArray"))
+                bk <- as(bk, "COO_SparseArray")
             .Call(c_rowWMeans, bk, v, split, w,
                 start(currentViewport(parent.frame(2L))), na.rm)
         },
@@ -425,7 +472,13 @@ setMethod("colMeans2", SMatrix, x_colMeans2)
     if (is.integer(w)) w <- as.double(w)
     # block read
     .parallel_col_apply(x, BPPARAM,
-        Fun = function(bk, w, na.rm) .Call(c_colMeans, bk, w, na.rm),
+        Fun = function(bk, w, na.rm)
+        {
+            # C++ code doesn't handle SVT_SparseArray objects
+            if (is(bk, "SVT_SparseArray"))
+                bk <- as(bk, "COO_SparseArray")
+            .Call(c_colMeans, bk, w, na.rm)
+        },
         w=w, na.rm=na.rm)
 }
 
@@ -493,7 +546,12 @@ setMethod("colWeightedMeans", SMatrix, x_colWeightedMeans)
     # block read
     rv <- .parallel_col_reduce(x, BPPARAM,
         Fun = function(bk, v, na.rm, center)
-            .Call(c_rowVars, bk, v, na.rm, center),
+        {
+            # C++ code doesn't handle SVT_SparseArray objects
+            if (is(bk, "SVT_SparseArray"))
+                bk <- as(bk, "COO_SparseArray")
+            .Call(c_rowVars, bk, v, na.rm, center)
+        },
         InitFun = .double_nrow3,
         ReduceFun=`+`, na.rm=na.rm, center=center)
     # finally
@@ -511,7 +569,13 @@ setMethod("colWeightedMeans", SMatrix, x_colWeightedMeans)
     }
     # block read
     .parallel_col_apply(x, BPPARAM,
-        Fun = function(bk, na.rm, center) .Call(c_colVars, bk, na.rm, center),
+        Fun = function(bk, na.rm, center)
+        {
+            # C++ code doesn't handle SVT_SparseArray objects
+            if (is(bk, "SVT_SparseArray"))
+                bk <- as(bk, "COO_SparseArray")
+            .Call(c_colVars, bk, na.rm, center)
+        },
         na.rm=na.rm, center=center)
 }
 
@@ -626,6 +690,9 @@ setMethod("colSds", SMatrix, x_colSds)
     rv <- .parallel_col_reduce2(x, BPPARAM,
         Fun = function(bk, v, split, w, na.rm)
         {
+            # C++ code doesn't handle SVT_SparseArray objects
+            if (is(bk, "SVT_SparseArray"))
+                bk <- as(bk, "COO_SparseArray")
             .Call(c_rowWVars, bk, v, split, w,
                 start(currentViewport(parent.frame(2L))), na.rm)
         },
@@ -642,7 +709,13 @@ setMethod("colSds", SMatrix, x_colSds)
     if (is.integer(w)) w <- as.double(w)
     # block read
     .parallel_col_apply(x, BPPARAM,
-        Fun = function(bk, w, na.rm) .Call(c_colWVars, bk, w, na.rm),
+        Fun = function(bk, w, na.rm)
+        {
+            # C++ code doesn't handle SVT_SparseArray objects
+            if (is(bk, "SVT_SparseArray"))
+                bk <- as(bk, "COO_SparseArray")
+            .Call(c_colWVars, bk, w, na.rm)
+        },
         w=w, na.rm=na.rm)
 }
 
@@ -768,7 +841,13 @@ setMethod("colWeightedSds", SMatrix, x_colWeightedSds)
 .x_row_mins <- function(x, na.rm, BPPARAM=getAutoBPPARAM())
 {
     .parallel_col_reduce(x, BPPARAM,
-        Fun = function(bk, v, na.rm) .Call(c_rowMins, bk, v, na.rm),
+        Fun = function(bk, v, na.rm)
+        {
+            # C++ code doesn't handle SVT_SparseArray objects
+            if (is(bk, "SVT_SparseArray"))
+                bk <- as(bk, "COO_SparseArray")
+            .Call(c_rowMins, bk, v, na.rm)
+        },
         InitFun = function(x, ...) rep(Inf, nrow(x)),
         ReduceFun=base::pmin, na.rm=na.rm)
 }
@@ -776,7 +855,13 @@ setMethod("colWeightedSds", SMatrix, x_colWeightedSds)
 .x_col_mins <- function(x, na.rm, BPPARAM=getAutoBPPARAM())
 {
     .parallel_col_apply(x, BPPARAM,
-        Fun = function(bk, na.rm) .Call(c_colMins, bk, na.rm),
+        Fun = function(bk, na.rm)
+        {
+            # C++ code doesn't handle SVT_SparseArray objects
+            if (is(bk, "SVT_SparseArray"))
+                bk <- as(bk, "COO_SparseArray")
+            .Call(c_colMins, bk, na.rm)
+        },
         na.rm=na.rm)
 }
 
@@ -815,7 +900,13 @@ setMethod("colMins", SMatrix, x_colMins)
 .x_row_maxs <- function(x, na.rm, BPPARAM=getAutoBPPARAM())
 {
     .parallel_col_reduce(x, BPPARAM,
-        Fun = function(bk, v, na.rm) .Call(c_rowMaxs, bk, v, na.rm),
+        Fun = function(bk, v, na.rm)
+        {
+            # C++ code doesn't handle SVT_SparseArray objects
+            if (is(bk, "SVT_SparseArray"))
+                bk <- as(bk, "COO_SparseArray")
+            .Call(c_rowMaxs, bk, v, na.rm)
+        },
         InitFun = function(x, ...) rep(-Inf, nrow(x)),
         ReduceFun=base::pmax, na.rm=na.rm)
 }
@@ -823,7 +914,13 @@ setMethod("colMins", SMatrix, x_colMins)
 .x_col_maxs <- function(x, na.rm, BPPARAM=getAutoBPPARAM())
 {
     .parallel_col_apply(x, BPPARAM,
-        Fun = function(bk, na.rm) .Call(c_colMaxs, bk, na.rm),
+        Fun = function(bk, na.rm)
+        {
+            # C++ code doesn't handle SVT_SparseArray objects
+            if (is(bk, "SVT_SparseArray"))
+                bk <- as(bk, "COO_SparseArray")
+            .Call(c_colMaxs, bk, na.rm)
+        },
         na.rm=na.rm)
 }
 
@@ -862,7 +959,13 @@ setMethod("colMaxs", SMatrix, x_colMaxs)
 .x_row_ranges <- function(x, na.rm, BPPARAM=getAutoBPPARAM())
 {
     .parallel_col_reduce(x, BPPARAM,
-        Fun = function(bk, v, na.rm) .Call(c_rowRanges, bk, v, na.rm),
+        Fun = function(bk, v, na.rm)
+        {
+            # C++ code doesn't handle SVT_SparseArray objects
+            if (is(bk, "SVT_SparseArray"))
+                bk <- as(bk, "COO_SparseArray")
+            .Call(c_rowRanges, bk, v, na.rm)
+        },
         InitFun = function(x, ...)
             t(matrix(c(Inf, -Inf), nrow=2L, ncol=nrow(x))),
         ReduceFun = function(v1, v2)
@@ -873,7 +976,13 @@ setMethod("colMaxs", SMatrix, x_colMaxs)
 .x_col_ranges <- function(x, na.rm, BPPARAM=getAutoBPPARAM())
 {
     lst <- .parallel_col_apply(x, BPPARAM,
-        Fun = function(bk, na.rm) .Call(c_colRanges, bk, na.rm),
+        Fun = function(bk, na.rm)
+        {
+            # C++ code doesn't handle SVT_SparseArray objects
+            if (is(bk, "SVT_SparseArray"))
+                bk <- as(bk, "COO_SparseArray")
+            .Call(c_colRanges, bk, na.rm)
+        },
         .flatten=FALSE, na.rm=na.rm)
     do.call(rbind, lst)
 }
@@ -913,7 +1022,13 @@ setMethod("colRanges", SMatrix, x_colRanges)
 .x_row_anyNA <- function(x, BPPARAM=getAutoBPPARAM())
 {
     .parallel_col_reduce(x, BPPARAM,
-        Fun = function(bk, v) .Call(c_row_anyNA, bk, v),
+        Fun = function(bk, v)
+        {
+            # C++ code doesn't handle SVT_SparseArray objects
+            if (is(bk, "SVT_SparseArray"))
+                bk <- as(bk, "COO_SparseArray")
+            .Call(c_row_anyNA, bk, v)
+        },
         InitFun = function(x, ...) logical(nrow(x)),
         ReduceFun=`|`)
 }
@@ -921,7 +1036,13 @@ setMethod("colRanges", SMatrix, x_colRanges)
 .x_col_anyNA <- function(x, BPPARAM=getAutoBPPARAM())
 {
     .parallel_col_apply(x, BPPARAM,
-        Fun = function(bk) .Call(c_col_anyNA, bk))
+        Fun = function(bk)
+        {
+            # C++ code doesn't handle SVT_SparseArray objects
+            if (is(bk, "SVT_SparseArray"))
+                bk <- as(bk, "COO_SparseArray")
+            .Call(c_col_anyNA, bk)
+        })
 }
 
 x_row_anyNA <- function(x, rows=NULL, cols=NULL, ..., useNames=NA)
@@ -980,7 +1101,13 @@ setMethod("colAnyNAs", SMatrix, x_col_anyNA)
     init_val <- rep(NA, nrow(x))
     storage.mode(init_val) <- type(x)
     # block read
-    blockReduce(function(bk, v) .Call(c_rowCollapse, bk, v),
+    blockReduce(function(bk, v)
+        {
+            # C++ code doesn't handle SVT_SparseArray objects
+            if (is(bk, "SVT_SparseArray"))
+                bk <- as(bk, "COO_SparseArray")
+            .Call(c_rowCollapse, bk, v)
+        },
         x, init=init_val, grid=colAutoGrid(x))
 }
 
@@ -993,7 +1120,13 @@ setMethod("colAnyNAs", SMatrix, x_col_anyNA)
     # init
     .Call(c_colCollapse_init, idx)
     # block read
-    blockReduce(function(bk, v) .Call(c_colCollapse, bk, v),
+    blockReduce(function(bk, v)
+        {
+            # C++ code doesn't handle SVT_SparseArray objects
+            if (is(bk, "SVT_SparseArray"))
+                bk <- as(bk, "COO_SparseArray")
+            .Call(c_colCollapse, bk, v)
+        },
         x, init=vector(type(x), ncol(x)), grid=colAutoGrid(x))
 }
 

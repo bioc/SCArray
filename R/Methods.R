@@ -35,7 +35,13 @@ x_num_col_mean_var <- function(x, na.rm=FALSE, useNames=FALSE, ...)
 {
     # block read
     lst <- .parallel_col_reduce(x, BPPARAM,
-        Fun = function(bk, v, na.rm) .Call(c_rowVars, bk, v, na.rm, NULL),
+        Fun = function(bk, v, na.rm)
+        {
+            # C++ code doesn't handle SVT_SparseArray objects
+            if (is(bk, "SVT_SparseArray"))
+                bk <- as(bk, "COO_SparseArray")
+            .Call(c_rowVars, bk, v, na.rm, NULL)
+        },
         InitFun = .double_nrow3,
         ReduceFun=`+`, na.rm=na.rm)
     # finally
@@ -46,7 +52,13 @@ x_num_col_mean_var <- function(x, na.rm=FALSE, useNames=FALSE, ...)
 {
     # block read
     lst <- .parallel_col_apply(x, BPPARAM,
-        Fun = function(bk, na.rm) .Call(c_colMeanVar, bk, na.rm),
+        Fun = function(bk, na.rm)
+        {
+            # C++ code doesn't handle SVT_SparseArray objects
+            if (is(bk, "SVT_SparseArray"))
+                bk <- as(bk, "COO_SparseArray")
+            .Call(c_colMeanVar, bk, na.rm)
+        },
         .flatten=FALSE, na.rm=na.rm)
     # finally
     do.call(rbind, lst)
@@ -144,7 +156,13 @@ x_num_col_nnzero <- function(x, na.counted=NA, ...)
 .x_row_nnzero <- function(x, na.counted=NA, BPPARAM=getAutoBPPARAM())
 {
     .parallel_col_reduce(x, BPPARAM,
-        Fun = function(bk, v, na) .Call(c_row_nnzero, bk, v, na),
+        Fun = function(bk, v, na)
+        {
+            # C++ code doesn't handle SVT_SparseArray objects
+            if (is(bk, "SVT_SparseArray"))
+                bk <- as(bk, "COO_SparseArray")
+            .Call(c_row_nnzero, bk, v, na)
+        },
         InitFun = function(x, ...) integer(nrow(x)),
         ReduceFun=`+`, na=na.counted)
 }
@@ -152,7 +170,13 @@ x_num_col_nnzero <- function(x, na.counted=NA, ...)
 .x_col_nnzero <- function(x, na.counted=NA, BPPARAM=getAutoBPPARAM())
 {
     .parallel_col_apply(x, BPPARAM,
-        Fun = function(bk, na) .Call(c_col_nnzero, bk, na),
+        Fun = function(bk, na)
+        {
+            # C++ code doesn't handle SVT_SparseArray objects
+            if (is(bk, "SVT_SparseArray"))
+                bk <- as(bk, "COO_SparseArray")
+            .Call(c_col_nnzero, bk, na)
+        },
         na=na.counted)
 }
 

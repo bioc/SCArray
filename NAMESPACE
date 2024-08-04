@@ -37,6 +37,7 @@ exportMethods(
 # Import all packages listed as Imports or Depends
 import(methods)
 import(gdsfmt)
+import(SparseArray)
 import(DelayedArray)
 import(DelayedMatrixStats)
 importFrom(utils, head, object.size, packageVersion, read.delim, str,

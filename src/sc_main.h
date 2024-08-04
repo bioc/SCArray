@@ -1,7 +1,7 @@
 // ===============================================================
 //
 // SCArray R package
-// Copyright (C) 2022-2023    Xiuwen Zheng
+// Copyright (C) 2022-2024    Xiuwen Zheng
 // All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -34,7 +34,7 @@
 #define FOR_LOOP_Mi    for (int i=0; i < M.nnzero; i++)
 
 
-/// SparseArraySeed
+/// COO_SparseMatrix
 struct SparseMatrix
 {
 	int nnzero;
@@ -45,7 +45,7 @@ struct SparseMatrix
 };
 
 
-// Return true if mat is a SparseArraySeed object
+// Return true if mat is a COO_SparseMatrix object
 bool is_sparse_seed(SEXP mat);
 // Get # of rows and columns
 void get_mat_size(SEXP mat, int &nrow, int &ncol);

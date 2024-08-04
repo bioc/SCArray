@@ -34,7 +34,7 @@
     # block processing
     blockReduce(function(bk, v, pb)
     {
-        if (is(bk, "SparseArraySeed")) bk <- as(bk, "sparseMatrix")
+        if (is(bk, "COO_SparseArray")) bk <- as(bk, "SVT_SparseArray")
         if (!is.null(pb))
             setTxtProgressBar(pb, currentBlockId())
         .Call(c_add, v, as.matrix(crossprod(bk)))
@@ -59,8 +59,7 @@
             # crossprod the whole matrix
             blockReduce(function(bk, v, ii)
             {
-                if (is(bk, "SparseArraySeed"))
-                    bk <- as(bk, "sparseMatrix")
+                if (is(bk, "COO_SparseArray")) bk <- as(bk, "SVT_SparseArray")
                 .Call(c_add, v, as.matrix(crossprod(bk)))
             }, x, matrix(0, ncol(x), ncol(x)), grid=gd, as.sparse=NA)
         } else {
@@ -68,8 +67,7 @@
             ii <- seq.int(s[3L], s[4L])  # sub columns
             blockReduce(function(bk, v, ii)
             {
-                if (is(bk, "SparseArraySeed"))
-                    bk <- as(bk, "sparseMatrix")
+                if (is(bk, "COO_SparseArray")) bk <- as(bk, "SVT_SparseArray")
                 .Call(c_add, v, as.matrix(crossprod(bk, bk[,ii])))
             }, x, matrix(0, ncol(x), length(ii)), grid=gd, as.sparse=NA, ii=ii)
         }
@@ -146,7 +144,7 @@ x_tcrossprod_x <- function(x, y)
         # efficient direction of 'x' is column, result in [ nrow(x), nrow(x) ]
         rv <- blockReduce(function(bk, v)
         {
-            if (is(bk, "SparseArraySeed")) bk <- as(bk, "sparseMatrix")
+            if (is(bk, "COO_SparseArray")) bk <- as(bk, "SVT_SparseArray")
             .Call(c_add, v, as.matrix(tcrossprod(bk)))
         }, x, matrix(0.0, nrow(x), nrow(x)), grid=colAutoGrid(x), as.sparse=NA)
         # output
@@ -185,7 +183,7 @@ x_mul_x_y0 <- function(x, y)
     if (!is.null(pb)) on.exit(close(pb))
     rv <- blockReduce(function(bk, v, ym, pb)
     {
-        if (is(bk, "SparseArraySeed")) bk <- as(bk, "sparseMatrix")
+        if (is(bk, "COO_SparseArray")) bk <- as(bk, "SVT_SparseArray")
         vw <- currentViewport()
         ii <- start(vw)[2L]:end(vw)[2L]
         if (!is.null(pb))

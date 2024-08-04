@@ -119,7 +119,7 @@ setMethod("extract_array", "SCArraySeed", .extract_array_sc_seed)
 setMethod("is_sparse", "SCArraySeed", .is_sparse_sc_seed)
 
 
-# extract a sparse array from DelayedArray
+# extract sparse data as COO_SparseArray object
 .extract_sparse_sc_seed <- function(x, index)
 {
     # check
@@ -135,23 +135,22 @@ setMethod("is_sparse", "SCArraySeed", .is_sparse_sc_seed)
             Raw=raw(), Integer=integer(), Logical=logical(),
             Real=double(), String=character(),
             stop("Unsupported data type: ", tp))
-        SparseArraySeed(ans_dim, nzdata=ans)
+        COO_SparseArray(ans_dim, nzdata=ans)
     } else {
         nd <- index.gdsn(.gds(x), .varname(x))
         ans <- readex.gdsn(nd, index, .sparse=TRUE)
         if (inherits(ans, "gds_sparse_nz_class"))
         {
             # ans is a list(nzdata, nzindex)
-            SparseArraySeed(ans_dim, ans$nzindex, ans$nzdata, check=FALSE)
+            COO_SparseArray(ans_dim, ans$nzindex, ans$nzdata, check=FALSE)
         } else {
             # ans could be a dense array, dgCMatrix or lgCMatrix
-            as(ans, "SparseArraySeed")
+            as(ans, "COO_SparseArray")
         }
     }
 }
 
-setMethod("OLD_extract_sparse_array", "SCArraySeed", .extract_sparse_sc_seed)
-
+setMethod("extract_sparse_array", "SCArraySeed", .extract_sparse_sc_seed)
 
 # SCArraySeed constructor
 SCArraySeed <- function(gds, varname)

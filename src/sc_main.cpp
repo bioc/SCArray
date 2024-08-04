@@ -1,7 +1,7 @@
 // ===============================================================
 //
 // SCArray R package
-// Copyright (C) 2021-2023    Xiuwen Zheng
+// Copyright (C) 2021-2024    Xiuwen Zheng
 // All rights reserved.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -28,13 +28,13 @@ static inline bool is_int(SEXP x)
 	return (v==INTSXP) || (v==LGLSXP);
 }
 
-// SparseArraySeed
+// COO_SparseMatrix
 SparseMatrix::SparseMatrix(SEXP mat)
 {
 	static const char *err_type =
-		"SparseArraySeed should be a numeric matrix.";
-	// slot nzindex
-	SEXP ii = GET_SLOT(mat, mkString("nzindex"));
+		"COO_SparseMatrix should be a numeric matrix.";
+	// slot nzcoo
+	SEXP ii = GET_SLOT(mat, mkString("nzcoo"));
 	if (!Rf_isMatrix(ii)) Rf_error("%s", err_type);
 	nnzero = INTEGER(GET_DIM(ii))[0];
 	nzi_r = INTEGER(ii); nzi_c = nzi_r + nnzero;
@@ -62,7 +62,7 @@ static void throw_error_type(SEXP x)
 
 bool is_sparse_seed(SEXP mat)
 {
-	return Rf_inherits(mat, "SparseArraySeed") == TRUE;
+	return Rf_inherits(mat, "COO_SparseMatrix") == TRUE;
 }
 
 void get_mat_size(SEXP mat, int &nrow, int &ncol)
