@@ -1,7 +1,7 @@
 Package: SCArray
 Type: Package
 Title: Large-scale single-cell omics data manipulation with GDS files
-Version: 1.14.0
+Version: 1.15.0
 Date: 2023-08-02
 Depends: R (>= 3.5.0), gdsfmt (>= 1.36.0), methods, DelayedArray (>= 0.31.5)
 Imports: S4Vectors, utils, Matrix, SparseArray (>= 1.5.13), BiocParallel,
