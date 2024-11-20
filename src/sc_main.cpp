@@ -34,12 +34,12 @@ SparseMatrix::SparseMatrix(SEXP mat)
 	static const char *err_type =
 		"COO_SparseMatrix should be a numeric matrix.";
 	// slot nzcoo
-	SEXP ii = GET_SLOT(mat, mkString("nzcoo"));
+	SEXP ii = GET_SLOT(mat, Rf_mkString("nzcoo"));
 	if (!Rf_isMatrix(ii)) Rf_error("%s", err_type);
 	nnzero = INTEGER(GET_DIM(ii))[0];
 	nzi_r = INTEGER(ii); nzi_c = nzi_r + nnzero;
 	// slot nzdata
-	nzdata = GET_SLOT(mat, mkString("nzdata"));
+	nzdata = GET_SLOT(mat, Rf_mkString("nzdata"));
 	if (TYPEOF(nzdata)!=REALSXP && !is_int(nzdata))
 		Rf_error("%s", err_type);
 	if (Rf_length(nzdata) != nnzero)
@@ -76,7 +76,7 @@ void get_mat_size(SEXP mat, int &nrow, int &ncol)
 			throw_error_type(mat);
 	} else if (is_sparse_seed(mat))
 	{
-		SEXP dm = GET_SLOT(mat, mkString("dim"));
+		SEXP dm = GET_SLOT(mat, Rf_mkString("dim"));
 		if (Rf_isNull(dm) || Rf_length(dm) != 2)
 			Rf_error("%s", err);
 		int *p = INTEGER(dm);
