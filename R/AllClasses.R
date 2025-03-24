@@ -142,10 +142,11 @@ setMethod("is_sparse", "SCArraySeed", .is_sparse_sc_seed)
         if (inherits(ans, "gds_sparse_nz_class"))
         {
             # ans is a list(nzdata, nzindex)
-            COO_SparseArray(ans_dim, ans$nzindex, ans$nzdata, check=FALSE)
+            ans <- COO_SparseArray(ans_dim, ans$nzindex, ans$nzdata, check=FALSE)
+            as(ans, "SparseArray")
         } else {
             # ans could be a dense array, dgCMatrix or lgCMatrix
-            as(ans, "COO_SparseArray")
+            as(ans, "SparseArray")
         }
     }
 }
