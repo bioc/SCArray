@@ -42,16 +42,18 @@ scRunPCA(sce, ncomponents=50, ntop=500, subset_row=NULL, scale=FALSE,
           that should be used, and \code{BPPARAM} to control parallelization.}
 }
 \details{
-    The function \code{runPCA()} simply calls \code{\link{runSVD}} and converts
-the results into a format similar to that returned by \code{\link{prcomp}}.
+    The function \code{runPCA()} simply calls \code{\link[BiocSingular]{runSVD}}
+and converts the results into a format similar to that returned by
+\code{\link{prcomp}}.
 
 \code{BSPARAM} can be one of
 \describe{
-    \item{\code{ExactParam()}:}{exact SVD with \code{\link{runExactSVD}}.}
+    \item{\code{ExactParam()}:}{exact SVD with
+        \code{\link[BiocSingular]{runExactSVD}}.}
     \item{\code{IrlbaParam()}:}{approximate SVD with \pkg{irlba} via
-        \code{\link{runIrlbaSVD}}.}
+        \code{\link[BiocSingular]{runIrlbaSVD}}.}
     \item{\code{RandomParam()}:}{approximate SVD with \pkg{rsvd} via
-        \code{\link{runRandomSVD}}.}
+        \code{\link[BiocSingular]{runRandomSVD}}.}
     \item{\code{FastAutoParam()}:}{fast approximate SVD, chosen based on
         the matrix representation.}
 }
@@ -70,9 +72,10 @@ for more details).
 
 \author{Xiuwen Zheng}
 \seealso{
-    \code{\link{runSVD}} for the underlying SVD function.
+    \code{\link[BiocSingular]{runSVD}} for the underlying SVD function.
 
-    \code{?\linkS4class{BiocSingularParam}} for the SVD algorithm choices.
+    \code{?\linkS4class[BiocSingular]{BiocSingularParam}} for the SVD algorithm
+    choices.
 
     \code{\link[BiocSingular]{runPCA}}.
 }

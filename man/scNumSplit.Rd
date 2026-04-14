@@ -23,8 +23,9 @@ groups.
 
 \author{Xiuwen Zheng}
 \seealso{
-    \code{\link{getAutoBPPARAM}}, \code{\link{BiocParallelParam}},
-    \code{\link{bpnworkers}}
+    \code{\link[DelayedArray]{getAutoBPPARAM}},
+    \code{\link[BiocParallel]{BiocParallelParam-class}},
+    \code{\link[BiocParallel]{bpnworkers}}
 }
 
 \examples{

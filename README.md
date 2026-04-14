@@ -12,7 +12,7 @@ SCArray provides large-scale single-cell omics data manipulation using Genomic D
 
 ## Bioconductor
 
-v1.12.0 ([http://bioconductor.org/packages/SCArray/](http://bioconductor.org/packages/SCArray/))
+v1.18.0 ([http://bioconductor.org/packages/SCArray/](http://bioconductor.org/packages/SCArray/))
 
 Package News: [NEWS](./NEWS)
 

@@ -24,7 +24,7 @@ scGetFiles(object, ...)
 
 \author{Xiuwen Zheng}
 \seealso{
-    \code{\link{path}}
+    \code{\link[DelayedArray]{path}}
 }
 
 \keyword{methods}

@@ -20,7 +20,7 @@ scHDF2GDS(h5_fn, outfn, group=c("matrix", "mm10"), feature_path=character(),
         detecting automatically using "genes", "gene_names" and "features/*"
         when available}
     \item{type}{numeric data type in the output file}
-    \item{compress}{the compression method, see \code{\link{add.gdsn}}}
+    \item{compress}{the compression method, see \code{\link[gdsfmt]{add.gdsn}}}
     \item{clean}{TRUE}
     \item{verbose}{if \code{TRUE}, show information}
 }

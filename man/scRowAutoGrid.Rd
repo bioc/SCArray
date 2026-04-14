@@ -50,9 +50,11 @@ in \code{blockApply()} or \code{blockReduce()}.
 
 \author{Xiuwen Zheng}
 \seealso{
-    \code{\link{rowAutoGrid}}, \code{\link{colAutoGrid}},
-    \code{\link{setAutoBlockSize}},
-    \code{\link{blockApply}}, \code{\link{blockReduce}}
+    \code{\link[DelayedArray]{rowAutoGrid}},
+    \code{\link[DelayedArray]{colAutoGrid}},
+    \code{\link[DelayedArray]{setAutoBlockSize}},
+    \code{\link[DelayedArray]{blockApply}},
+    \code{\link[DelayedArray]{blockReduce}}
 }
 
 \examples{

@@ -17,7 +17,7 @@ scMEX2GDS(feature_fn, barcode_fn, mtx_fn, outfn,
     \item{outfn}{the output file name in GDS format}
     \item{feature_colnm}{the column names used in \code{feature_fn}}
     \item{type}{numeric data type in the output file}
-    \item{compress}{the compression method, see \code{\link{add.gdsn}}}
+    \item{compress}{the compression method, see \code{\link[gdsfmt]{add.gdsn}}}
     \item{clean}{TRUE}
     \item{verbose}{if \code{TRUE}, show information}
 }

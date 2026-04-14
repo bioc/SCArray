@@ -235,13 +235,14 @@ the GDS file.
 \seealso{
     \itemize{
         \item The \pkg{DelayedMatrixStats} package for more row/column
-            summarization methods for \link{DelayedMatrix} objects.
-        \item \link{DelayedArray-utils} for other common operations on
-            \link{DelayedMatrix} objects.
-        \item \link{DelayedMatrix} objects.
+            summarization methods for \link[DelayedArray]{DelayedMatrix}
+            objects.
+        \item \link[DelayedArray]{DelayedArray-utils} for other common
+            operations on \link[DelayedArray]{DelayedMatrix} objects.
+        \item \link[DelayedArray]{DelayedMatrix} objects.
         \item \link[base]{matrix} objects in base R.
-        \item \link{getAutoBPPARAM}, \link{BiocParallelParam} for parallel
-            processing,
+        \item \link[DelayedArray]{getAutoBPPARAM},
+            \link[BiocParallel]{BiocParallelParam} for parallel processing,
         \item The \pkg{MatrixGenerics} package for more row/column
             summarization methods.
     }

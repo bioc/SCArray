@@ -13,7 +13,7 @@ scArray(gdsfile, varname)
     \item{varname}{character for the node name in the GDS file}
 }
 \value{
-    Return an object of class \code{\link{DelayedArray}}.
+    Return an object of class \code{\link[DelayedArray]{DelayedArray}}.
 }
 
 \author{Xiuwen Zheng}

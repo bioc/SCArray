@@ -18,7 +18,7 @@ scClose(gdsfile)
 }
 \value{
     Return an object of class \code{SCArrayFileClass} inherited from
-\code{\link{gds.class}}.
+\code{\link[gdsfmt]{gds.class}}.
 }
 
 \author{Xiuwen Zheng}

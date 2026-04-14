@@ -1,3 +1,9 @@
+CHANGES IN VERSION 1.20.0
+-------------------------
+
+    o fix the package anchors for all Rd \link{}
+
+
 CHANGES IN VERSION 1.16.0
 -------------------------
 

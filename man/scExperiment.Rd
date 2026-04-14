@@ -21,8 +21,9 @@ scExperiment(gdsfile, sce=TRUE, use.names=TRUE, load.row=TRUE, load.col=TRUE)
         "sample.data" in \code{gdsfile}}
 }
 \value{
-    Return an instance of \code{\link{SingleCellExperiment}} or
-\code{\link{SummarizedExperiment}}.
+    Return an instance of
+\code{\link[SingleCellExperiment]{SingleCellExperiment}} or
+\code{\link[SummarizedExperiment]{SummarizedExperiment}}.
 }
 
 \author{Xiuwen Zheng}
