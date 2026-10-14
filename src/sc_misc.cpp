@@ -566,45 +566,52 @@ SEXP c_col_anyNA(SEXP mat)
 
 
 // ====  rowCollapse & colCollapse  ====
+//
+// State is no longer kept in file-scope globals (which were not reentrant and
+// shared a column cursor between the row and column variants).  c_rowCollapse_init
+// returns an external pointer owning the per-target-column row map, and the
+// per-block column offset is passed in from R via currentViewport().
 
-static std::vector< std::vector<int> > row_map;
-static int idx_col = 0;
+typedef std::vector< std::vector<int> > TRowMap;
+
+static void rowmap_finalizer(SEXP ext)
+{
+	TRowMap *p = (TRowMap*) R_ExternalPtrAddr(ext);
+	if (p) { delete p; R_ClearExternalPtr(ext); }
+}
 
 SEXP c_rowCollapse_init(SEXP idx, SEXP dim)
 {
 	const int nrow = INTEGER(dim)[0];
 	const int ncol = INTEGER(dim)[1];
 	const int *pIdx = INTEGER(idx), nIdx = Rf_length(idx);
-	row_map.clear();
-	row_map.resize(ncol);
+	TRowMap *row_map = new TRowMap(ncol);
 	int ii = 0;
 	for (int i=0; i < nrow; i++)
 	{
 		int j = pIdx[ii++];
 		if (ii >= nIdx) ii = 0;
 		if (0 < j && j <= ncol)
-			row_map[j-1].push_back(i);
+			(*row_map)[j-1].push_back(i);
 	}
-	idx_col = 0;
-	return R_NilValue;
+	SEXP ext = PROTECT(R_MakeExternalPtr(row_map, R_NilValue, R_NilValue));
+	R_RegisterCFinalizerEx(ext, rowmap_finalizer, TRUE);
+	UNPROTECT(1);
+	return ext;
 }
 
-SEXP c_rowCollapse_done()
-{
-	row_map.clear();
-	return R_NilValue;
-}
-
-SEXP c_rowCollapse(SEXP mat, SEXP val)
+SEXP c_rowCollapse(SEXP mat, SEXP val, SEXP ext, SEXP col_start)
 {
 	int nrow, ncol;
 	get_mat_size(mat, nrow, ncol);
+	TRowMap &row_map = *(TRowMap*) R_ExternalPtrAddr(ext);
+	const int cst = INTEGER(col_start)[0];
 	// do
 	if (TYPEOF(mat) == REALSXP)
 	{
 		double *p = REAL(mat), *pv = REAL(val);
 		FOR_LOOP_i {
-			const std::vector<int> &r = row_map[idx_col + i];
+			const std::vector<int> &r = row_map[cst + i];
 			std::vector<int>::const_iterator it = r.begin();
 			for (; it != r.end(); it++)
 				pv[*it] = p[*it];
@@ -613,53 +620,43 @@ SEXP c_rowCollapse(SEXP mat, SEXP val)
 	{
 		int *p = INTEGER(mat), *pv = INTEGER(val);
 		FOR_LOOP_i {
-			const std::vector<int> &r = row_map[idx_col + i];
+			const std::vector<int> &r = row_map[cst + i];
 			std::vector<int>::const_iterator it = r.begin();
 			for (; it != r.end(); it++)
 				pv[*it] = p[*it];
 		}
 	}
-	idx_col += ncol;
 	// output
 	return val;
 }
 
 // ====
 
-static int idx_n = 0, idx_i = 0;
-static int *idx_p = NULL;
-
-SEXP c_colCollapse_init(SEXP idx)
-{
-	idx_n = Rf_length(idx);
-	idx_i = idx_col = 0;
-	idx_p = (idx_n > 0) ? INTEGER(idx) : &NA_INTEGER;
-	return R_NilValue;
-}
-
-SEXP c_colCollapse(SEXP mat, SEXP val)
+SEXP c_colCollapse(SEXP mat, SEXP val, SEXP idx, SEXP col_start)
 {
 	int nrow, ncol;
 	get_mat_size(mat, nrow, ncol);
+	const int idx_n = Rf_length(idx);
+	const int *idx_p = (idx_n > 0) ? INTEGER(idx) : NULL;
+	const int cst = INTEGER(col_start)[0];
 	// do
 	if (TYPEOF(mat) == REALSXP)
 	{
 		double *p = REAL(mat), *pv = REAL(val);
 		FOR_LOOP_i {
-			int j = idx_p[idx_i++];
-			if (idx_i >= idx_n) idx_i = 0;
-			pv[idx_col+i] = (j != NA_INTEGER) ? p[j-1] : NA_REAL;
+			int g = cst + i;
+			int j = idx_p ? idx_p[g % idx_n] : NA_INTEGER;
+			pv[g] = (j != NA_INTEGER) ? p[j-1] : NA_REAL;
 		}
 	} else if (TYPEOF(mat) == INTSXP)
 	{
 		int *p = INTEGER(mat), *pv = INTEGER(val);
 		FOR_LOOP_i {
-			int j = idx_p[idx_i++];
-			if (idx_i >= idx_n) idx_i = 0;
-			pv[idx_col+i] = (j != NA_INTEGER) ? p[j-1] : j;
+			int g = cst + i;
+			int j = idx_p ? idx_p[g % idx_n] : NA_INTEGER;
+			pv[g] = (j != NA_INTEGER) ? p[j-1] : NA_INTEGER;
 		}
 	}
-	idx_col += ncol;
 	// output
 	return val;
 }

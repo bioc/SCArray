@@ -83,7 +83,7 @@ x_colSums <- function(x, na.rm=FALSE, dims=1)
     )
 }
 
-x_rowSums2 <- function(x, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=NA)
+x_rowSums2 <- function(x, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=TRUE)
 {
     x_check(x, "Calling SCArray:::x_rowSums2() with %s ...")
     stopifnot(is.logical(na.rm), length(na.rm)==1L)
@@ -101,7 +101,7 @@ x_rowSums2 <- function(x, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=NA)
     }
 }
 
-x_colSums2 <- function(x, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=NA)
+x_colSums2 <- function(x, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=TRUE)
 {
     x_check(x, "Calling SCArray:::x_colSums2() with %s ...")
     stopifnot(is.logical(na.rm), length(na.rm)==1L)
@@ -128,19 +128,27 @@ setMethod("colSums2", SMatrix, x_colSums2)
 ################
 
 x_rowLogSumExps <- function(lx, rows=NULL, cols=NULL, na.rm=FALSE, ...,
-    useNames=NA)
+    useNames=TRUE)
 {
     x_check(lx, "Calling SCArray:::x_rowLogSumExps() with %s ...")
-    log(x_rowSums2(exp(lx), rows=rows, cols=cols, na.rm=na.rm, ...,
-        useNames=useNames))
+    lx <- x_subset(lx, rows, cols)
+    # log-sum-exp with max-shift for numerical stability (avoid exp() overflow)
+    m <- rowMaxs(lx, na.rm=na.rm, useNames=FALSE)
+    sh <- m; sh[!is.finite(sh)] <- 0   # avoid Inf-Inf in the shift
+    v <- m + log(x_rowSums2(exp(lx - sh), na.rm=na.rm, useNames=FALSE))
+    if (isTRUE(useNames)) names(v) <- rownames(lx)
+    v
 }
 
 x_colLogSumExps <- function(lx, rows=NULL, cols=NULL, na.rm=FALSE, ...,
-    useNames=NA)
+    useNames=TRUE)
 {
     x_check(lx, "Calling SCArray:::x_colLogSumExps() with %s ...")
-    log(x_colSums2(exp(lx), rows=rows, cols=cols, na.rm=na.rm, ...,
-        useNames=useNames))
+    lx <- x_subset(lx, rows, cols)
+    # column log-sum-exp == row log-sum-exp on the (lazily) transposed matrix
+    v <- x_rowLogSumExps(t(lx), na.rm=na.rm, useNames=FALSE)
+    if (isTRUE(useNames)) names(v) <- colnames(lx)
+    v
 }
 
 setMethod("rowLogSumExps", SMatrix, x_rowLogSumExps)
@@ -267,17 +275,24 @@ setMethod("colsum", SMatrix, x_colsum_grp)
 }
 
 x_rowProds <- function(x, rows=NULL, cols=NULL, na.rm=FALSE,
-    method=c("direct", "expSumLog"), ..., useNames=NA)
+    method=c("direct", "expSumLog"), ..., useNames=TRUE)
 {
     x_check(x, "Calling SCArray:::x_rowProds() with %s ...")
     stopifnot(is.logical(na.rm), length(na.rm)==1L)
     method <- match.arg(method)
     if (method == "direct")
     {
-        if (x_type(x) == 1L)
+        k <- x_type(x)
+        if (k < 3L)
         {
+            # native kernel for both orientations: delegating to the parent
+            # method is unsafe here because it forwards 'method=' down to the
+            # per-block (sparse) colProds/rowProds, which rejects it
             x <- x_subset(x, rows, cols)
-            v <- .x_row_prods(x, na.rm, ...)
+            if (k == 1L)
+                v <- .x_row_prods(x, na.rm, ...)       # column-native seed
+            else
+                v <- .x_col_prods(t(x), na.rm, ...)    # transposed seed
             if (isTRUE(useNames)) names(v) <- rownames(x)
             v  # output
         } else {
@@ -299,23 +314,27 @@ x_rowProds <- function(x, rows=NULL, cols=NULL, na.rm=FALSE,
 }
 
 x_colProds <- function(x, rows=NULL, cols=NULL, na.rm=FALSE,
-    method=c("direct", "expSumLog"), ..., useNames=NA)
+    method=c("direct", "expSumLog"), ..., useNames=TRUE)
 {
     x_check(x, "Calling SCArray:::x_colProds() with %s ...")
     stopifnot(is.logical(na.rm), length(na.rm)==1L)
     method <- match.arg(method)
     if (method == "direct")
     {
-        if (x_type(x) != 2L)
+        k <- x_type(x)
+        if (k < 3L)
         {
-            x_msg("Calling DelayedMatrixStats::colProds() ...")
-            callNextMethod()
-        } else {
-            x_msg("Calling DelayedArray::.x_row_prods() ...")
+            # native kernel for both orientations (see x_rowProds note)
             x <- x_subset(x, rows, cols)
-            v <- .x_row_prods(t(x), na.rm, ...)
+            if (k == 1L)
+                v <- .x_col_prods(x, na.rm, ...)       # column-native seed
+            else
+                v <- .x_row_prods(t(x), na.rm, ...)    # transposed seed
             if (isTRUE(useNames)) names(v) <- colnames(x)
             v  # output
+        } else {
+            x_msg("Calling DelayedMatrixStats::colProds() ...")
+            callNextMethod()
         }
     } else {
         x <- x_subset(x, rows, cols)
@@ -401,7 +420,7 @@ x_colMeans <- function(x, na.rm=FALSE, dims=1)
     )
 }
 
-x_rowMeans2 <- function(x, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=NA)
+x_rowMeans2 <- function(x, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=TRUE)
 {
     x_check(x, "Calling SCArray:::x_rowMeans2() with %s ...")
     stopifnot(is.logical(na.rm), length(na.rm)==1L)
@@ -419,7 +438,7 @@ x_rowMeans2 <- function(x, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=NA)
     }
 }
 
-x_colMeans2 <- function(x, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=NA)
+x_colMeans2 <- function(x, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=TRUE)
 {
     x_check(x, "Calling SCArray:::x_colMeans2() with %s ...")
     stopifnot(is.logical(na.rm), length(na.rm)==1L)
@@ -477,13 +496,13 @@ setMethod("colMeans2", SMatrix, x_colMeans2)
             # C++ code doesn't handle SVT_SparseArray objects
             if (is(bk, "SVT_SparseArray"))
                 bk <- as(bk, "COO_SparseArray")
-            .Call(c_colMeans, bk, w, na.rm)
+            .Call(c_colWMeans, bk, w, na.rm)
         },
         w=w, na.rm=na.rm)
 }
 
 x_rowWeightedMeans <- function(x, w=NULL, rows=NULL, cols=NULL, na.rm=FALSE,
-    ..., useNames=NA)
+    ..., useNames=TRUE)
 {
     x_check(x, "Calling SCArray:::x_rowWeightedMeans() with %s ...")
     if (is.null(w))
@@ -506,7 +525,7 @@ x_rowWeightedMeans <- function(x, w=NULL, rows=NULL, cols=NULL, na.rm=FALSE,
 }
 
 x_colWeightedMeans <- function(x, w=NULL, rows=NULL, cols=NULL, na.rm=FALSE,
-    ..., useNames=NA)
+    ..., useNames=TRUE)
 {
     x_check(x, "Calling SCArray:::x_colWeightedMeans() with %s ...")
     if (is.null(w))
@@ -580,7 +599,7 @@ setMethod("colWeightedMeans", SMatrix, x_colWeightedMeans)
 }
 
 x_rowVars <- function(x, rows=NULL, cols=NULL, na.rm=FALSE, center=NULL, ...,
-    useNames=NA)
+    useNames=TRUE)
 {
     x_check(x, "Calling SCArray:::x_rowVars() with %s ...")
     stopifnot(is.logical(na.rm), length(na.rm)==1L)
@@ -602,7 +621,7 @@ x_rowVars <- function(x, rows=NULL, cols=NULL, na.rm=FALSE, center=NULL, ...,
 }
 
 x_colVars <- function(x, rows=NULL, cols=NULL, na.rm=FALSE, center=NULL, ...,
-    useNames=NA)
+    useNames=TRUE)
 {
     x_check(x, "Calling SCArray:::x_colVars() with %s ...")
     stopifnot(is.logical(na.rm), length(na.rm)==1L)
@@ -630,7 +649,7 @@ setMethod("colVars", SMatrix, x_colVars)
 ################
 
 x_rowSds <- function(x, rows=NULL, cols=NULL, na.rm=FALSE, center=NULL, ...,
-    useNames=NA)
+    useNames=TRUE)
 {
     x_check(x, "Calling SCArray:::x_rowSds() with %s ...")
     stopifnot(is.logical(na.rm), length(na.rm)==1L)
@@ -653,7 +672,7 @@ x_rowSds <- function(x, rows=NULL, cols=NULL, na.rm=FALSE, center=NULL, ...,
 }
 
 x_colSds <- function(x, rows=NULL, cols=NULL, na.rm=FALSE, center=NULL, ...,
-    useNames=NA)
+    useNames=TRUE)
 {
     x_check(x, "Calling SCArray:::x_colSds() with %s ...")
     stopifnot(is.logical(na.rm), length(na.rm)==1L)
@@ -720,7 +739,7 @@ setMethod("colSds", SMatrix, x_colSds)
 }
 
 x_rowWeightedVars <- function(x, w=NULL, rows=NULL, cols=NULL, na.rm=FALSE,
-    ..., useNames=NA)
+    ..., useNames=TRUE)
 {
     if (is.null(w))
     {
@@ -746,7 +765,7 @@ x_rowWeightedVars <- function(x, w=NULL, rows=NULL, cols=NULL, na.rm=FALSE,
 }
 
 x_colWeightedVars <- function(x, w=NULL, rows=NULL, cols=NULL, na.rm=FALSE,
-    ..., useNames=NA)
+    ..., useNames=TRUE)
 {
     if (is.null(w))
     {
@@ -778,7 +797,7 @@ setMethod("colWeightedVars", SMatrix, x_colWeightedVars)
 ################
 
 x_rowWeightedSds <- function(x, w=NULL, rows=NULL, cols=NULL, na.rm=FALSE,
-    ..., useNames=NA)
+    ..., useNames=TRUE)
 {
     if (is.null(w))
     {
@@ -805,7 +824,7 @@ x_rowWeightedSds <- function(x, w=NULL, rows=NULL, cols=NULL, na.rm=FALSE,
 }
 
 x_colWeightedSds <- function(x, w=NULL, rows=NULL, cols=NULL, na.rm=FALSE,
-    ..., useNames = NA)
+    ..., useNames = TRUE)
 {
     if (is.null(w))
     {
@@ -987,30 +1006,38 @@ setMethod("colMaxs", SMatrix, x_colMaxs)
     do.call(rbind, lst)
 }
 
-x_rowRanges <- function(x, rows=NULL, cols=NULL, na.rm=FALSE)
+x_rowRanges <- function(x, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=TRUE)
 {
     x_check(x, "Calling SCArray:::x_rowRanges() with %s ...")
     stopifnot(is.logical(na.rm), length(na.rm)==1L)
-    switch(x_type(x),
-        .x_row_ranges(x_subset(x, rows, cols), na.rm),     # 1
-        .x_col_ranges(t(x_subset(x, rows, cols)), na.rm),  # 2
-        {   # 3
-            x_msg("Calling DelayedArray::rowRanges() ...")
-            callNextMethod()
-        })
+    k <- x_type(x)
+    if (k < 3L)
+    {
+        xs <- x_subset(x, rows, cols)
+        v <- if (k == 1L) .x_row_ranges(xs, na.rm) else .x_col_ranges(t(xs), na.rm)
+        if (isTRUE(useNames)) rownames(v) <- rownames(xs)
+        v
+    } else {
+        x_msg("Calling DelayedArray::rowRanges() ...")
+        callNextMethod()
+    }
 }
 
-x_colRanges <- function(x, rows=NULL, cols=NULL, na.rm=FALSE)
+x_colRanges <- function(x, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=TRUE)
 {
     x_check(x, "Calling SCArray:::x_colRanges() with %s ...")
     stopifnot(is.logical(na.rm), length(na.rm)==1L)
-    switch(x_type(x),
-        .x_col_ranges(x_subset(x, rows, cols), na.rm),     # 1
-        .x_row_ranges(t(x_subset(x, rows, cols)), na.rm),  # 2
-        {   # 3
-            x_msg("Calling DelayedArray::colRanges() ...")
-            callNextMethod()
-        })
+    k <- x_type(x)
+    if (k < 3L)
+    {
+        xs <- x_subset(x, rows, cols)
+        v <- if (k == 1L) .x_col_ranges(xs, na.rm) else .x_row_ranges(t(xs), na.rm)
+        if (isTRUE(useNames)) rownames(v) <- colnames(xs)
+        v
+    } else {
+        x_msg("Calling DelayedArray::colRanges() ...")
+        callNextMethod()
+    }
 }
 
 setMethod("rowRanges", SMatrix, x_rowRanges)
@@ -1045,7 +1072,7 @@ setMethod("colRanges", SMatrix, x_colRanges)
         })
 }
 
-x_row_anyNA <- function(x, rows=NULL, cols=NULL, ..., useNames=NA)
+x_row_anyNA <- function(x, rows=NULL, cols=NULL, ..., useNames=TRUE)
 {
     x_check(x, "Calling SCArray:::x_row_anyNA() with %s ...")
     k <- x_type(x)
@@ -1064,7 +1091,7 @@ x_row_anyNA <- function(x, rows=NULL, cols=NULL, ..., useNames=NA)
     }
 }
 
-x_col_anyNA <- function(x, rows=NULL, cols=NULL, ..., useNames=NA)
+x_col_anyNA <- function(x, rows=NULL, cols=NULL, ..., useNames=TRUE)
 {
     x_check(x, "Calling SCArray:::x_col_anyNA() with %s ...")
     k <- x_type(x)
@@ -1095,18 +1122,17 @@ setMethod("colAnyNAs", SMatrix, x_col_anyNA)
     ii <- unique(sort(idx))  # NA is removed
     idx <- match(idx, ii)
     x <- x[, ii, drop=FALSE]
-    # init
-    .Call(c_rowCollapse_init, idx, dim(x))
-    on.exit(.Call(c_rowCollapse_done))
+    # init: external pointer owning the per-column row map (auto-freed by GC)
+    ptr <- .Call(c_rowCollapse_init, idx, dim(x))
     init_val <- rep(NA, nrow(x))
     storage.mode(init_val) <- type(x)
-    # block read
+    # block read; the column offset is taken from the current viewport
     blockReduce(function(bk, v)
         {
             # C++ code doesn't handle SVT_SparseArray objects
             if (is(bk, "SVT_SparseArray"))
                 bk <- as(bk, "COO_SparseArray")
-            .Call(c_rowCollapse, bk, v)
+            .Call(c_rowCollapse, bk, v, ptr, start(currentViewport())[2L]-1L)
         },
         x, init=init_val, grid=colAutoGrid(x))
 }
@@ -1117,20 +1143,18 @@ setMethod("colAnyNAs", SMatrix, x_col_anyNA)
     ii <- unique(sort(idx))  # NA is removed
     idx <- match(idx, ii)
     x <- x[ii, , drop=FALSE]
-    # init
-    .Call(c_colCollapse_init, idx)
-    # block read
+    # block read; idx and the column offset are passed in each block
     blockReduce(function(bk, v)
         {
             # C++ code doesn't handle SVT_SparseArray objects
             if (is(bk, "SVT_SparseArray"))
                 bk <- as(bk, "COO_SparseArray")
-            .Call(c_colCollapse, bk, v)
+            .Call(c_colCollapse, bk, v, idx, start(currentViewport())[2L]-1L)
         },
         x, init=vector(type(x), ncol(x)), grid=colAutoGrid(x))
 }
 
-x_rowCollapse <- function(x, idxs, rows=NULL, ..., useNames=NA)
+x_rowCollapse <- function(x, idxs, rows=NULL, ..., useNames=TRUE)
 {
     x_check(x, "Calling SCArray:::x_rowCollapse() with %s ...")
     stopifnot(is.numeric(idxs), length(idxs) > 0L)
@@ -1150,7 +1174,7 @@ x_rowCollapse <- function(x, idxs, rows=NULL, ..., useNames=NA)
     }
 }
 
-x_colCollapse <- function(x, idxs, cols=NULL, ..., useNames=NA)
+x_colCollapse <- function(x, idxs, cols=NULL, ..., useNames=TRUE)
 {
     x_check(x, "Calling SCArray:::x_colCollapse() with %s ...")
     stopifnot(is.numeric(idxs), length(idxs) > 0L)
@@ -1177,7 +1201,7 @@ setMethod("colCollapse", SMatrix, x_colCollapse)
 ################
 
 x_rowDiffs <- function(x, rows=NULL, cols=NULL, lag=1L, differences=1L, ...,
-    useNames=NA)
+    useNames=TRUE)
 {
     x_check(x, "Calling SCArray:::x_rowDiffs() with %s ...")
     # check
@@ -1225,7 +1249,7 @@ x_rowDiffs <- function(x, rows=NULL, cols=NULL, lag=1L, differences=1L, ...,
 }
 
 x_colDiffs <- function(x, rows=NULL, cols=NULL, lag=1L, differences=1L, ...,
-    useNames=NA)
+    useNames=TRUE)
 {
     x_check(x, "Calling SCArray:::x_colDiffs() with %s ...")
     # check
@@ -1285,7 +1309,7 @@ setMethod("is_sparse", "DelayedNaryIsoOp", function(x) FALSE)
 
 
 x_rowSdDiffs <- function(x, rows=NULL, cols=NULL, na.rm=FALSE, diff=1L,
-    trim=0, ..., useNames=NA)
+    trim=0, ..., useNames=TRUE)
 {
     stopifnot(is.numeric(trim), length(trim)==1L, 0<=trim, trim<=0.5)
     x <- rowDiffs(x, rows=rows, cols=cols, differences=diff, useNames=useNames)
@@ -1294,7 +1318,7 @@ x_rowSdDiffs <- function(x, rows=NULL, cols=NULL, na.rm=FALSE, diff=1L,
 }
 
 x_colSdDiffs <- function(x, rows=NULL, cols=NULL, na.rm=FALSE, diff=1L,
-    trim=0, ..., useNames=NA)
+    trim=0, ..., useNames=TRUE)
 {
     stopifnot(is.numeric(trim), length(trim)==1L, 0<=trim, trim<=0.5)
     x <- colDiffs(x, rows=rows, cols=cols, differences=diff, useNames=useNames)
@@ -1303,7 +1327,7 @@ x_colSdDiffs <- function(x, rows=NULL, cols=NULL, na.rm=FALSE, diff=1L,
 }
 
 x_rowVarDiffs <- function(x, rows=NULL, cols=NULL, na.rm=FALSE, diff=1L,
-    trim=0, ..., useNames=NA)
+    trim=0, ..., useNames=TRUE)
 {
     stopifnot(is.numeric(trim), length(trim)==1L, 0<=trim, trim<=0.5)
     x <- rowDiffs(x, rows=rows, cols=cols, differences=diff, useNames=useNames)
@@ -1312,7 +1336,7 @@ x_rowVarDiffs <- function(x, rows=NULL, cols=NULL, na.rm=FALSE, diff=1L,
 }
 
 x_colVarDiffs <- function(x, rows=NULL, cols=NULL, na.rm=FALSE, diff=1L,
-    trim=0, ..., useNames=NA)
+    trim=0, ..., useNames=TRUE)
 {
     stopifnot(is.numeric(trim), length(trim)==1L, 0<=trim, trim<=0.5)
     x <- colDiffs(x, rows=rows, cols=cols, differences=diff, useNames=useNames)

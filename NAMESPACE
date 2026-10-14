@@ -10,8 +10,7 @@ useDynLib(SCArray,
     c_rowMins, c_colMins, c_rowMaxs, c_colMaxs, c_rowRanges, c_colRanges,
     c_row_sum_grp, c_col_sum_grp, c_row_nnzero, c_col_nnzero,
     c_row_anyNA, c_col_anyNA,
-    c_rowCollapse_init, c_rowCollapse_done, c_rowCollapse,
-    c_colCollapse_init, c_colCollapse,
+    c_rowCollapse_init, c_rowCollapse, c_colCollapse,
     c_sparse_blocksize)
 
 # Export the following names

@@ -13,10 +13,10 @@ test_sce_matrix <- function()
 	mt <- assays(sce)$counts
 
 	cM <- unname(colMeans(mt))
-	cM2 <- colMeans2(mt)
+	cM2 <- unname(colMeans2(mt))
 	checkEquals(cM, cM2, "counts: colmean")
 
 	rM <- unname(rowMeans(mt))
-	rM2 <- rowMeans2(mt)
+	rM2 <- unname(rowMeans2(mt))
 	checkEquals(rM, rM2, "counts: rowmean")
 }

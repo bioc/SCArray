@@ -119,40 +119,42 @@ packages.
 \usage{
 \S4method{rowSums}{SC_GDSMatrix}(x, na.rm=FALSE, dims=1)
 \S4method{colSums}{SC_GDSMatrix}(x, na.rm=FALSE, dims=1)
-\S4method{rowSums2}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=NA)
-\S4method{colSums2}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=NA)
+\S4method{rowSums2}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=TRUE)
+\S4method{colSums2}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=TRUE)
 
-\S4method{rowLogSumExps}{SC_GDSMatrix}(lx, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=NA)
-\S4method{colLogSumExps}{SC_GDSMatrix}(lx, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=NA)
+\S4method{rowLogSumExps}{SC_GDSMatrix}(lx, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=TRUE)
+\S4method{colLogSumExps}{SC_GDSMatrix}(lx, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=TRUE)
 
 \S4method{rowProds}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE,
-    method=c("direct", "expSumLog"), ..., useNames=NA)
+    method=c("direct", "expSumLog"), ..., useNames=TRUE)
 \S4method{colProds}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE,
-    method=c("direct", "expSumLog"), ..., useNames=NA)
+    method=c("direct", "expSumLog"), ..., useNames=TRUE)
 
 \S4method{rowMeans}{SC_GDSMatrix}(x, na.rm=FALSE, dims=1)
 \S4method{colMeans}{SC_GDSMatrix}(x, na.rm=FALSE, dims=1)
-\S4method{rowMeans2}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=NA)
-\S4method{colMeans2}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=NA)
-\S4method{rowWeightedMeans}{SC_GDSMatrix}(x, w=NULL, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=NA)
-\S4method{colWeightedMeans}{SC_GDSMatrix}(x, w=NULL, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=NA)
+\S4method{rowMeans2}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=TRUE)
+\S4method{colMeans2}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=TRUE)
+\S4method{rowWeightedMeans}{SC_GDSMatrix}(x, w=NULL, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=TRUE)
+\S4method{colWeightedMeans}{SC_GDSMatrix}(x, w=NULL, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=TRUE)
 
-\S4method{rowVars}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, center=NULL, ..., useNames=NA)
-\S4method{colVars}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, center=NULL, ..., useNames=NA)
-\S4method{rowWeightedVars}{SC_GDSMatrix}(x, w=NULL, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=NA)
-\S4method{colWeightedVars}{SC_GDSMatrix}(x, w=NULL, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=NA)
+\S4method{rowVars}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, center=NULL, ..., useNames=TRUE)
+\S4method{colVars}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, center=NULL, ..., useNames=TRUE)
+\S4method{rowWeightedVars}{SC_GDSMatrix}(x, w=NULL, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=TRUE)
+\S4method{colWeightedVars}{SC_GDSMatrix}(x, w=NULL, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=TRUE)
 
-\S4method{rowSds}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, center=NULL, ..., useNames=NA)
-\S4method{colSds}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, center=NULL, ..., useNames=NA)
-\S4method{rowWeightedSds}{SC_GDSMatrix}(x, w=NULL, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=NA)
-\S4method{colWeightedSds}{SC_GDSMatrix}(x, w=NULL, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=NA)
+\S4method{rowSds}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, center=NULL, ..., useNames=TRUE)
+\S4method{colSds}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, center=NULL, ..., useNames=TRUE)
+\S4method{rowWeightedSds}{SC_GDSMatrix}(x, w=NULL, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=TRUE)
+\S4method{colWeightedSds}{SC_GDSMatrix}(x, w=NULL, rows=NULL, cols=NULL, na.rm=FALSE, ..., useNames=TRUE)
 
 \S4method{rowMins}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE)
 \S4method{colMins}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE)
 \S4method{rowMaxs}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE)
 \S4method{colMaxs}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE)
-\S4method{rowRanges}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE)
-\S4method{colRanges}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE)
+\S4method{rowRanges}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, ...,
+    useNames=TRUE)
+\S4method{colRanges}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE, ...,
+    useNames=TRUE)
 
 # Get means and variances together for each row or column,
 #     return a matrix with two columns for mean and variance
@@ -166,26 +168,26 @@ scColMeanVar(x, na.rm=FALSE, useNames=FALSE, ...)
 # Compute row sums across columns
 \S4method{colsum}{SC_GDSMatrix}(x, group, reorder=TRUE, na.rm=FALSE, ...)
 
-\S4method{rowAnyNAs}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, ..., useNames=NA)
-\S4method{colAnyNAs}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, ..., useNames=NA)
+\S4method{rowAnyNAs}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, ..., useNames=TRUE)
+\S4method{colAnyNAs}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, ..., useNames=TRUE)
 
-\S4method{rowCollapse}{SC_GDSMatrix}(x, idxs, rows=NULL, ..., useNames=NA)
-\S4method{colCollapse}{SC_GDSMatrix}(x, idxs, cols=NULL, ..., useNames=NA)
+\S4method{rowCollapse}{SC_GDSMatrix}(x, idxs, rows=NULL, ..., useNames=TRUE)
+\S4method{colCollapse}{SC_GDSMatrix}(x, idxs, cols=NULL, ..., useNames=TRUE)
 
 \S4method{rowDiffs}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, lag=1L,
-    differences=1L, ..., useNames=NA)
+    differences=1L, ..., useNames=TRUE)
 \S4method{colDiffs}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, lag=1L,
-    differences=1L, ..., useNames=NA)
+    differences=1L, ..., useNames=TRUE)
 
 \S4method{rowSdDiffs}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE,
-    diff=1L, trim=0, ..., useNames=NA)
+    diff=1L, trim=0, ..., useNames=TRUE)
 \S4method{colSdDiffs}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE,
-    diff=1L, trim=0, ..., useNames=NA)
+    diff=1L, trim=0, ..., useNames=TRUE)
 
 \S4method{rowVarDiffs}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE,
-    diff=1L, trim=0, ..., useNames=NA)
+    diff=1L, trim=0, ..., useNames=TRUE)
 \S4method{colVarDiffs}{SC_GDSMatrix}(x, rows=NULL, cols=NULL, na.rm=FALSE,
-    diff=1L, trim=0, ..., useNames=NA)
+    diff=1L, trim=0, ..., useNames=TRUE)
 
 \S4method{rowAvgsPerColSet}{SC_GDSMatrix}(X, W=NULL, rows=NULL, S, FUN=rowMeans, ...,
     na.rm=NA, tFUN=FALSE)
@@ -202,7 +204,8 @@ scColMeanVar(x, na.rm=FALSE, useNames=FALSE, ...)
     \item{w}{\code{NULL} or a numeric vector for weights}
     \item{W}{\code{NULL} or a matrix for weights}
     \item{center}{\code{NULL}, or a vector of pre-calculated row (column) means}
-    \item{useNames}{if \code{TRUE}, the name attributes of result are set}
+    \item{useNames}{if \code{TRUE} (the default for the row*/col* methods),
+        the name attributes of result are set}
     \item{method}{"direct" (by default) or "expSumLog" (calculates the product
         via the logarithmic transform)}
     \item{group}{a vector for grouping the rows or columns}

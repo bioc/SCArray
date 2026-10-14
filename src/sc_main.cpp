@@ -90,8 +90,6 @@ void get_mat_size(SEXP mat, int &nrow, int &ncol)
 extern "C"
 {
 
-static inline double sq(double x) { return x*x; }
-
 static inline double sum(const double x[], size_t n)
 {
 	double s = 0;
@@ -341,9 +339,10 @@ SEXP c_colProds(SEXP mat, SEXP narm)
 				pv[i] = s;
 			}
 		}
-	} else 
+	} else
 		throw_error_type(mat);
 	// output
+	UNPROTECT(1);
 	return Prod;
 }
 
@@ -602,8 +601,9 @@ SEXP c_colWMeans(SEXP mat, SEXP w, SEXP narm)
 	// output variable
 	SEXP Avg = PROTECT(NEW_NUMERIC(ncol));
 	double *pv = REAL(Avg), sum_w = 0;
-	if (!na_rm)
-		for (int j=0; j < nrow; j++) sum_w += pw[j];
+	// always need the full weight sum: the sparse na.rm path seeds the
+	// per-column denominator with sum_w and then subtracts NA weights
+	for (int j=0; j < nrow; j++) sum_w += pw[j];
 	// do
 	if (TYPEOF(mat) == REALSXP)
 	{
@@ -1064,12 +1064,12 @@ SEXP c_rowWVars(SEXP mat, SEXP val, SEXP split, SEXP w, SEXP st, SEXP narm)
 			FOR_LOOP_i_j  if (!ISNAN(p[j]))
 			{
 				pSW[j] += pw[i];
-				v = p[j]*pw[i]; pS[j] += v; pS2[j] += v*v; pN[j]++;
+				v = p[j]*pw[i]; pS[j] += v; pS2[j] += v*p[j]; pN[j]++;
 			}
 		} else {
 			FOR_LOOP_i_j  {
 				pSW[j] += pw[i];
-				v = p[j]*pw[i]; pS[j] += v; pS2[j] += v*v;
+				v = p[j]*pw[i]; pS[j] += v; pS2[j] += v*p[j];
 			}
 			for (int j=0; j < nrow; j++) pN[j] += ncol;
 		}
@@ -1081,13 +1081,13 @@ SEXP c_rowWVars(SEXP mat, SEXP val, SEXP split, SEXP w, SEXP st, SEXP narm)
 			FOR_LOOP_i_j  if (p[j] != NA_INTEGER)
 			{
 				pSW[j] += pw[i];
-				v = p[j]*pw[i]; pS[j] += v; pS2[j] += v*v; pN[j]++;
+				v = p[j]*pw[i]; pS[j] += v; pS2[j] += v*p[j]; pN[j]++;
 			}
 		} else {
 			FOR_LOOP_i_j  if (p[j] != NA_INTEGER)
 			{
 				pSW[j] += pw[i];
-				v = p[j]*pw[i]; pS[j] += v; pS2[j] += v*v;
+				v = p[j]*pw[i]; pS[j] += v; pS2[j] += v*p[j];
 			} else {
 				pS[j] = pS2[j] = NA_REAL; break;
 			}
@@ -1110,7 +1110,7 @@ SEXP c_rowWVars(SEXP mat, SEXP val, SEXP split, SEXP w, SEXP st, SEXP narm)
 					int c = M.nzi_c[i] - 1, r = M.nzi_r[i] - 1;
 					if (!ISNAN(p[i]))
 					{
-						v = p[i]*pw[c]; pS[r] += v; pS2[r] += v*v;
+						v = p[i]*pw[c]; pS[r] += v; pS2[r] += v*p[i];
 					} else {
 						pN[r]--; pSW[r] -= pw[c];
 					}
@@ -1118,7 +1118,7 @@ SEXP c_rowWVars(SEXP mat, SEXP val, SEXP split, SEXP w, SEXP st, SEXP narm)
 			} else {
 				FOR_LOOP_Mi  {
 					int c = M.nzi_c[i] - 1, r = M.nzi_r[i] - 1;
-					v = p[i]*pw[c]; pS[r] += v; pS2[r] += v*v;
+					v = p[i]*pw[c]; pS[r] += v; pS2[r] += v*p[i];
 				}
 			}
 		} else {
@@ -1130,7 +1130,7 @@ SEXP c_rowWVars(SEXP mat, SEXP val, SEXP split, SEXP w, SEXP st, SEXP narm)
 					int c = M.nzi_c[i] - 1, r = M.nzi_r[i] - 1;
 					if (p[i] != NA_INTEGER)
 					{
-						v = p[i]*pw[c]; pS[r] += v; pS2[r] += v*v;
+						v = p[i]*pw[c]; pS[r] += v; pS2[r] += v*p[i];
 					} else {
 						pN[r]--; pSW[r] -= pw[c];
 					}
@@ -1140,7 +1140,7 @@ SEXP c_rowWVars(SEXP mat, SEXP val, SEXP split, SEXP w, SEXP st, SEXP narm)
 					int c = M.nzi_c[i] - 1, r = M.nzi_r[i] - 1;
 					if (p[i] != NA_INTEGER)
 					{
-						v = p[i]*pw[c]; pS[r] += v; pS2[r] += v*v;
+						v = p[i]*pw[c]; pS[r] += v; pS2[r] += v*p[i];
 					} else { pS[r] = pS2[r] = NA_REAL; }
 				}
 			}
@@ -1158,8 +1158,8 @@ SEXP c_rowWVars_final(SEXP val)
 	double *p = REAL(ans);
 	for (size_t i=0; i < n; i++)
 	{
-		double u = sq(pN[i] / pSW[i]);
-		p[i] = (pN[i]>1) ? u*(pS2[i] - pS[i]*pS[i]/pN[i]) / (pN[i]-1) : NA_REAL;
+		// weighted sample variance: sum_w(x-mu)^2 / (sum_w - 1)
+		p[i] = (pN[i]>1) ? (pS2[i] - pS[i]*pS[i]/pSW[i]) / (pSW[i]-1) : NA_REAL;
 	}
 	return ans;
 }
@@ -1185,17 +1185,17 @@ SEXP c_colWVars(SEXP mat, SEXP w, SEXP narm)
 					if (!ISNAN(p[j]))
 					{
 						sw += pw[j];
-						v = p[j]*pw[j]; s += v; s2 += v*v; n++;
+						v = p[j]*pw[j]; s += v; s2 += v*p[j]; n++;
 					}
-				pv[i] = (n>1) ? sq(n/sw)*(s2 - s*s/n) / (n-1) : NA_REAL;
+				pv[i] = (n>1) ? (s2 - s*s/sw) / (sw-1) : NA_REAL;
 			}
 		} else {
-			double u = sq(nrow / sum(pw, nrow));
+			double sw_all = sum(pw, nrow);
 			FOR_LOOP_i {
 				double s=0, s2=0, v;
 				for (int j=0; j < nrow; j++)
-					{ v = p[j]*pw[j]; s += v; s2 += v*v; }
-				pv[i] = (nrow>1) ? u*(s2 - s*s/nrow) / (nrow-1) : NA_REAL;
+					{ v = p[j]*pw[j]; s += v; s2 += v*p[j]; }
+				pv[i] = (nrow>1) ? (s2 - s*s/sw_all) / (sw_all-1) : NA_REAL;
 			}
 		}
 	} else if (is_int(mat))
@@ -1209,18 +1209,18 @@ SEXP c_colWVars(SEXP mat, SEXP w, SEXP narm)
 					if (p[j] != NA_INTEGER)
 					{
 						sw += pw[j];
-						v = p[j]*pw[j]; s += v; s2 += v*v; n++;
+						v = p[j]*pw[j]; s += v; s2 += v*p[j]; n++;
 					}
-				pv[i] = (n>1) ? sq(n/sw)*(s2 - s*s/n) / (n-1) : NA_REAL;
+				pv[i] = (n>1) ? (s2 - s*s/sw) / (sw-1) : NA_REAL;
 			}
 		} else {
-			double u = sq(nrow / sum(pw, nrow));
+			double sw_all = sum(pw, nrow);
 			FOR_LOOP_i {
 				double s=0, s2=0, v;
 				for (int j=0; j < nrow; j++)
-					if (p[j] != NA_INTEGER) { v = p[j]*pw[j]; s += v; s2 += v*v; }
+					if (p[j] != NA_INTEGER) { v = p[j]*pw[j]; s += v; s2 += v*p[j]; }
 					else { s = s2 = NA_REAL; break; }
-				pv[i] = (nrow>1) ? u*(s2 - s*s/nrow) / (nrow-1) : NA_REAL;
+				pv[i] = (nrow>1) ? (s2 - s*s/sw_all) / (sw_all-1) : NA_REAL;
 			}
 		}
 	} else if (is_sparse_seed(mat))
@@ -1250,7 +1250,7 @@ SEXP c_colWVars(SEXP mat, SEXP w, SEXP narm)
 					int c = M.nzi_c[i] - 1, r = M.nzi_r[i] - 1;
 					if (!ISNAN(p[i]))
 					{
-						v = p[i]*pw[r]; pv[c] += v; p2[c] += v*v;
+						v = p[i]*pw[r]; pv[c] += v; p2[c] += v*p[i];
 					} else {
 						pN[c]--; sw[c] -= pw[r];
 					}
@@ -1258,7 +1258,7 @@ SEXP c_colWVars(SEXP mat, SEXP w, SEXP narm)
 			} else {
 				FOR_LOOP_Mi  {
 					int c = M.nzi_c[i] - 1, r = M.nzi_r[i] - 1;
-					v = p[i]*pw[r]; pv[c] += v; p2[c] += v*v;
+					v = p[i]*pw[r]; pv[c] += v; p2[c] += v*p[i];
 				}
 			}
 		} else {
@@ -1270,7 +1270,7 @@ SEXP c_colWVars(SEXP mat, SEXP w, SEXP narm)
 					int c = M.nzi_c[i] - 1, r = M.nzi_r[i] - 1;
 					if (p[i] != NA_INTEGER)
 					{
-						v = p[i]*pw[r]; pv[c] += v; p2[c] += v*v;
+						v = p[i]*pw[r]; pv[c] += v; p2[c] += v*p[i];
 					} else {
 						pN[c]--; sw[c] -= pw[r];
 					}
@@ -1280,7 +1280,7 @@ SEXP c_colWVars(SEXP mat, SEXP w, SEXP narm)
 					int c = M.nzi_c[i] - 1, r = M.nzi_r[i] - 1;
 					if (p[i] != NA_INTEGER)
 					{
-						v = p[i]*pw[r]; pv[c] += v; p2[c] += v*v;
+						v = p[i]*pw[r]; pv[c] += v; p2[c] += v*p[i];
 					} else {
 						pv[c] = p2[c] = NA_REAL;
 					}
@@ -1291,8 +1291,7 @@ SEXP c_colWVars(SEXP mat, SEXP w, SEXP narm)
 		for (int i=0; i < ncol; i++)
 		{
 			int n = na_rm ? pN[i] : nrow;
-			double u = sq(n / sw[i]);
-			pv[i] = (n>1) ? u*(p2[i] - pv[i]*pv[i]/n) / (n-1) : NA_REAL;
+			pv[i] = (n>1) ? (p2[i] - pv[i]*pv[i]/sw[i]) / (sw[i]-1) : NA_REAL;
 		}
 		// release
 		UNPROTECT(1 + (int)na_rm);

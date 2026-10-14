@@ -1,3 +1,44 @@
+CHANGES IN VERSION 1.21.2
+-------------------------
+
+    o register the native routines (src/init.c) and stop searching symbols
+      dynamically; .Call() now checks the number of arguments
+
+    o bug fix: `colWeightedMeans()` ignored the weights on a non-transposed
+      SC_GDSMatrix (it called the unweighted C kernel instead of c_colWMeans)
+
+    o bug fix: `rowProds()` and `colProds()` failed on a GDS-backed matrix
+      because the parent method was called with the unsupported `method=`
+      argument; both now use the native kernels in either orientation
+
+    o bug fix: `rowWeightedVars()`, `colWeightedVars()`, `rowWeightedSds()`
+      and `colWeightedSds()` returned an incorrect weighted variance (the
+      sum-of-squares term used the weight squared and a non-standard
+      normalization); now matches matrixStats: sum_w(x-mu)^2 / (sum_w - 1)
+
+    o bug fix: `colWeightedMeans(., na.rm=TRUE)` on a sparse matrix used a
+      wrong denominator (the full weight sum was not initialized)
+
+    o bug fix: memory protection leak in the C kernel `c_colProds`
+
+    o `rowLogSumExps()` and `colLogSumExps()` are now numerically stable
+      (max-subtraction) and no longer overflow for large values
+
+    o `useNames=TRUE` is now the default for the row*/col* statistics, matching
+      DelayedMatrixStats; names are kept unless `useNames=FALSE`. `rowRanges()`
+      and `colRanges()` gain a `useNames` argument and set the row names
+
+    o `rowCollapse()` and `colCollapse()` no longer keep state in C file-scope
+      globals (which were not reentrant and shared a column cursor between the
+      two); the row map is held in an external pointer and the column offset is
+      passed per block. This also removes a dangling-pointer hazard in the old
+      colCollapse code
+
+    o new unit tests checking every overridden row*/col* statistic against
+      matrixStats for both matrix orientations, with and without NAs, plus
+      tests for log-sum-exp overflow, name handling, and rowCollapse/colCollapse
+
+
 CHANGES IN VERSION 1.20.0
 -------------------------
 

@@ -1,13 +1,13 @@
 Package: SCArray
 Type: Package
 Title: Large-scale single-cell omics data manipulation with GDS files
-Version: 1.21.0
-Date: 2026-04-13
+Version: 1.21.2
+Date: 2026-10-14
 Depends: R (>= 3.5.0), gdsfmt (>= 1.36.0), methods, DelayedArray (>= 0.31.5)
 Imports: S4Vectors, utils, Matrix, SparseArray (>= 1.5.13), BiocParallel,
         DelayedMatrixStats, SummarizedExperiment, SingleCellExperiment,
         BiocSingular
-Suggests: BiocGenerics, scater, scuttle, uwot, RUnit, knitr, markdown,
+Suggests: BiocGenerics, RUnit, matrixStats, scater, scuttle, uwot, knitr,
         rmarkdown, rhdf5, HDF5Array
 Authors@R: c(person("Xiuwen", "Zheng", role=c("aut", "cre"),
         email="xiuwen.zheng@abbvie.com",
