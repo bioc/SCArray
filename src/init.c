@@ -34,6 +34,7 @@ extern SEXP c_sparse_blocksize(SEXP, SEXP, SEXP, SEXP);
 extern SEXP c_rowSums(SEXP, SEXP, SEXP);
 extern SEXP c_colSums(SEXP, SEXP);
 extern SEXP c_rowProds(SEXP, SEXP, SEXP);
+extern SEXP c_rowProds_final(SEXP);
 extern SEXP c_colProds(SEXP, SEXP);
 
 extern SEXP c_rowMeans(SEXP, SEXP, SEXP);
@@ -81,7 +82,7 @@ static const R_CallMethodDef CallEntries[] =
 	CALL(c_sparse_blocksize, 4),
 
 	CALL(c_rowSums, 3),   CALL(c_colSums, 2),
-	CALL(c_rowProds, 3),  CALL(c_colProds, 2),
+	CALL(c_rowProds, 3),  CALL(c_rowProds_final, 1),  CALL(c_colProds, 2),
 
 	CALL(c_rowMeans, 3),  CALL(c_rowMeans_final, 1),  CALL(c_colMeans, 2),
 	CALL(c_rowWMeans, 6), CALL(c_rowWMeans_final, 1), CALL(c_colWMeans, 3),

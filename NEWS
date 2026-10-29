@@ -1,3 +1,16 @@
+CHANGES IN VERSION 1.21.3
+-------------------------
+
+    o bug fix: `rowProds()` and `colProds()` returned NaN instead of 0 when the
+      running product overflowed before a zero (Inf * 0); the product is now
+      accumulated as mantissa and exponent, so it can not overflow, and the
+      result no longer depends on the precision of 'long double'
+
+    o the unit tests compare products with matrixStats' `method="expSumLog"`,
+      since the "direct" reference (base::prod) is platform-dependent on
+      overflow; this fixes the test failure on x86_64 and aarch64 Linux
+
+
 CHANGES IN VERSION 1.21.2
 -------------------------
 

@@ -69,9 +69,14 @@ suppressPackageStartupMessages({
     checkEquals(colRanges(x, na.rm=na.rm), colRanges(r, na.rm=na.rm), msg("colRanges"), tolerance=.TOL)
 
     # -- products (fully-qualified reference: the MatrixGenerics 'matrix'
-    #    method leaks matrixStats' 'method' arg) --
-    checkEquals(rowProds(x, na.rm=na.rm), matrixStats::rowProds(r, na.rm=na.rm), msg("rowProds"), tolerance=.TOL)
-    checkEquals(colProds(x, na.rm=na.rm), matrixStats::colProds(r, na.rm=na.rm), msg("colProds"), tolerance=.TOL)
+    #    method leaks matrixStats' 'method' arg; method="expSumLog" since the
+    #    "direct" reference uses base::prod(), whose 'long double' precision
+    #    is platform-dependent: a product overflowing 'double' before a zero
+    #    gives 0 on x86_64 but Inf*0=NaN on arm64 macOS) --
+    checkEquals(rowProds(x, na.rm=na.rm), matrixStats::rowProds(r, na.rm=na.rm, method="expSumLog"),
+        msg("rowProds"), tolerance=.TOL)
+    checkEquals(colProds(x, na.rm=na.rm), matrixStats::colProds(r, na.rm=na.rm, method="expSumLog"),
+        msg("colProds"), tolerance=.TOL)
 
     # -- weighted means (regression for the c_colWMeans dispatch bug) --
     set.seed(100L)
@@ -197,6 +202,40 @@ test_logSumExps_overflow <- function()
         "rowLogSumExps vs matrixStats", tolerance=.TOL)
     checkEquals(unname(cl), unname(matrixStats::colLogSumExps(r)),
         "colLogSumExps vs matrixStats", tolerance=.TOL)
+}
+
+
+# ---- products: a running product overflowing 'double' must not give NaN ----
+
+test_prods_overflow <- function()
+{
+    nr <- 4L; nc <- 30L
+    r <- matrix(1e30, nr, nc)   # 1e30^11 > DBL_MAX, but fits in 32-bit float
+    r[1L, 25L] <- 0             # zero after the running product overflows
+    r[2L, 1L] <- 0              # zero before
+    r[3L, 16:30] <- 1e-30       # product ~1 with overflowing intermediates
+                                # row 4: the product itself overflows to Inf
+    rownames(r) <- paste0("g", seq_len(nr))
+    colnames(r) <- paste0("c", seq_len(nc))
+    outfn <- tempfile(fileext=".gds")
+    on.exit(unlink(outfn, force=TRUE))
+    scConvGDS(r, outfn, save.sp=FALSE, verbose=FALSE)
+    gf <- scOpen(outfn)
+    on.exit(scClose(gf), add=TRUE, after=FALSE)
+    m <- as(scArray(gf, "counts"), "SC_GDSMatrix")
+    r <- unname(as.matrix(m))   # the stored (32-bit float) values
+
+    ans <- matrixStats::rowProds(r, method="expSumLog")
+    checkEquals(ans[c(1L,2L,4L)], c(0, 0, Inf), "rowProds overflow reference")
+    checkEquals(unname(rowProds(m)), ans, "rowProds type1", tolerance=.TOL)
+    checkEquals(unname(colProds(t(m))), ans, "colProds type2", tolerance=.TOL)
+
+    # force many small blocks: the product is carried over blocks
+    old <- getAutoBlockSize(); on.exit(setAutoBlockSize(old), add=TRUE)
+    setAutoBlockSize(100)
+    checkEquals(unname(rowProds(m)), ans, "rowProds multiblock", tolerance=.TOL)
+    checkEquals(unname(colProds(t(m))), ans, "colProds(t) multiblock",
+        tolerance=.TOL)
 }
 
 

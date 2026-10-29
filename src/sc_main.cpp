@@ -262,36 +262,71 @@ SEXP c_colSums(SEXP mat, SEXP narm)
 
 // ====  rowProds & colProds  ====
 
+// A running product is kept as mantissa * 2^exponent (frexp), so it can not
+// overflow to Inf and then turn into NaN (Inf * 0) at a later zero; the result
+// does not depend on the precision of 'long double' either, which differs
+// across platforms (e.g., x86_64 vs arm64) and is used by base::prod()
+
+static inline void prod_mul(double &m, double &e, double x)
+{
+	m *= x;  // no overflow, since |m| <= 1
+	if (R_FINITE(m) && m != 0)
+	{
+		int k;
+		m = frexp(m, &k);  // |m| in [0.5, 1)
+		e += k;
+	}
+}
+
+static inline double prod_final(double m, double e)
+{
+	if (ISNAN(m)) return m;
+	// avoid integer overflow, the result is 0 or +-Inf beyond this range
+	if (e > 1e5) e = 1e5; else if (e < -1e5) e = -1e5;
+	return ldexp(m, (int)e);
+}
+
 SEXP c_rowProds(SEXP mat, SEXP val, SEXP narm)
 {
 	const bool na_rm = (Rf_asLogical(narm) == TRUE);
 	int nrow, ncol;
 	get_mat_size(mat, nrow, ncol);
-	// do
-	double *pv = REAL(val);
+	// do, val = c(mantissa, exponent)
+	double *pm = REAL(val), *pe = pm + nrow;
 	if (TYPEOF(mat) == REALSXP)
 	{
 		double *p = REAL(mat);
 		if (na_rm)
 		{
-			FOR_LOOP_i_j  if (!ISNAN(p[j])) pv[j] *= p[j];
+			FOR_LOOP_i_j  if (!ISNAN(p[j])) prod_mul(pm[j], pe[j], p[j]);
 		} else {
-			FOR_LOOP_i_j  pv[j] *= p[j];
+			FOR_LOOP_i_j  prod_mul(pm[j], pe[j], p[j]);
 		}
 	} else if (is_int(mat))
 	{
 		int *p = INTEGER(mat);
 		if (na_rm)
 		{
-			FOR_LOOP_i_j  if (p[j] != NA_INTEGER) pv[j] *= p[j];
+			FOR_LOOP_i_j  if (p[j] != NA_INTEGER) prod_mul(pm[j], pe[j], p[j]);
 		} else {
 			FOR_LOOP_i_j
-				if (p[j] != NA_INTEGER) pv[j] *= p[j]; else pv[j] = NA_REAL;
+				if (p[j] != NA_INTEGER) prod_mul(pm[j], pe[j], p[j]); else pm[j] = NA_REAL;
 		}
 	} else 
 		throw_error_type(mat);
 	// output
 	return val;
+}
+
+SEXP c_rowProds_final(SEXP val)
+{
+	const size_t n = Rf_xlength(val) / 2;
+	const double *pm = REAL(val);
+	const double *pe = pm + n;
+	SEXP ans = NEW_NUMERIC(n);
+	double *p = REAL(ans);
+	for (size_t i=0; i < n; i++) p[i] = prod_final(pm[i], pe[i]);
+	return ans;
 }
 
 
@@ -310,15 +345,15 @@ SEXP c_colProds(SEXP mat, SEXP narm)
 		if (na_rm)
 		{
 			FOR_LOOP_i {
-				double s = 1;
-				for (int j=0; j < nrow; j++) if (!ISNAN(p[j])) s *= p[j];
-				pv[i] = s;
+				double m = 1, e = 0;
+				for (int j=0; j < nrow; j++) if (!ISNAN(p[j])) prod_mul(m, e, p[j]);
+				pv[i] = prod_final(m, e);
 			}
 		} else {
 			FOR_LOOP_i {
-				double s = 1;
-				for (int j=0; j < nrow; j++) s *= p[j];
-				pv[i] = s;
+				double m = 1, e = 0;
+				for (int j=0; j < nrow; j++) prod_mul(m, e, p[j]);
+				pv[i] = prod_final(m, e);
 			}
 		}
 	} else if (is_int(mat))
@@ -327,16 +362,16 @@ SEXP c_colProds(SEXP mat, SEXP narm)
 		if (na_rm)
 		{
 			FOR_LOOP_i {
-				double s = 1;
-				for (int j=0; j < nrow; j++) if (p[j] != NA_INTEGER) s *= p[j];
-				pv[i] = s;
+				double m = 1, e = 0;
+				for (int j=0; j < nrow; j++) if (p[j] != NA_INTEGER) prod_mul(m, e, p[j]);
+				pv[i] = prod_final(m, e);
 			}
 		} else {
 			FOR_LOOP_i {
-				double s = 1;
+				double m = 1, e = 0;
 				for (int j=0; j < nrow; j++)
-					if (p[j] != NA_INTEGER) s *= p[j]; else { s = NA_REAL; break; }
-				pv[i] = s;
+					if (p[j] != NA_INTEGER) prod_mul(m, e, p[j]); else { m = NA_REAL; break; }
+				pv[i] = prod_final(m, e);
 			}
 		}
 	} else

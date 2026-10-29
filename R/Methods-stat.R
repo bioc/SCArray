@@ -249,7 +249,7 @@ setMethod("colsum", SMatrix, x_colsum_grp)
 
 .x_row_prods <- function(x, na.rm, BPPARAM=getAutoBPPARAM())
 {
-    .parallel_col_reduce(x, BPPARAM,
+    rv <- .parallel_col_reduce(x, BPPARAM,
         Fun = function(bk, v, na.rm)
         {
             # C++ code doesn't handle SVT_SparseArray objects
@@ -257,8 +257,17 @@ setMethod("colsum", SMatrix, x_colsum_grp)
                 bk <- as(bk, "COO_SparseArray")
             .Call(c_rowProds, bk, v, na.rm)
         },
-        InitFun = function(x, ...) rep(1, nrow(x)),
-        ReduceFun=`*`, as.sparse=FALSE, na.rm=na.rm)
+        # c(mantissa, exponent) to avoid overflow (see c_rowProds)
+        InitFun = function(x, ...) c(rep(1, nrow(x)), double(nrow(x))),
+        ReduceFun = function(v1, v2)
+        {
+            n <- length(v1) %/% 2L
+            i <- seq_len(n)
+            c(v1[i] * v2[i], v1[-i] + v2[-i])
+        },
+        as.sparse=FALSE, na.rm=na.rm)
+    # finally
+    .Call(c_rowProds_final, rv)
 }
 
 .x_col_prods <- function(x, na.rm, BPPARAM=getAutoBPPARAM())

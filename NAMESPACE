@@ -1,7 +1,7 @@
 # Native routines that are to be used in R via .Call
 useDynLib(SCArray,
     c_add, c_get_split,
-    c_rowSums, c_colSums, c_rowProds, c_colProds,
+    c_rowSums, c_colSums, c_rowProds, c_rowProds_final, c_colProds,
     c_rowMeans, c_rowMeans_final, c_colMeans,
     c_rowWMeans, c_rowWMeans_final, c_colWMeans,
     c_rowVars, c_rowVars_final, c_colVars,
